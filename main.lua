@@ -105,32 +105,6 @@ local GridCorner = Instance.new("UICorner")
 GridCorner.CornerRadius = UDim.new(0, 14)
 GridCorner.Parent = GridOverlay
 
-local Glow = Instance.new("ImageLabel")
-Glow.Size = UDim2.new(1, 150, 1, 150)
-Glow.Position = UDim2.new(0.5, 0, 0.5, 0)
-Glow.AnchorPoint = Vector2.new(0.5, 0.5)
-Glow.BackgroundTransparency = 1
-Glow.Image = "rbxassetid://4975687002"
-Glow.ImageColor3 = Color3.fromRGB(0, 120, 255)
-Glow.ImageTransparency = 0.6
-Glow.ZIndex = 0
-Glow.Parent = MainFrame
-
-local glowGradient = Instance.new("UIGradient")
-glowGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 40, 80)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 120, 255))
-})
-glowGradient.Parent = Glow
-
-task.spawn(function()
-    local rot = 0
-    while task.wait(0.01) do
-        rot = rot + 0.5
-        glowGradient.Rotation = rot % 360
-    end
-end)
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 14)
@@ -434,7 +408,7 @@ createMiniBtn("Cash Counter", function() CashPopup.Visible = not CashPopup.Visib
 createMiniBtn("Account Util", function() UtilPopup.Visible = not UtilPopup.Visible end)
 
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 140, 1, -75)
+Sidebar.Size = UDim2.new(0, 140, 1, -66)
 Sidebar.Position = UDim2.new(0, 0, 0, 66)
 Sidebar.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 Sidebar.BackgroundTransparency = 0
@@ -451,22 +425,18 @@ sidebarSep.BorderSizePixel = 0
 sidebarSep.ZIndex = 4
 sidebarSep.Parent = Sidebar
 
-local SidebarCorner = Instance.new("UICorner")
-SidebarCorner.CornerRadius = UDim.new(0, 10)
-SidebarCorner.Parent = Sidebar
-
 local SidebarList = Instance.new("UIListLayout")
-SidebarList.Padding = UDim.new(0, 4)
+SidebarList.Padding = UDim.new(0, 2)
 SidebarList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 SidebarList.Parent = Sidebar
 
 local SidebarPadding = Instance.new("UIPadding")
-SidebarPadding.PaddingTop = UDim.new(0, 8)
+SidebarPadding.PaddingTop = UDim.new(0, 6)
 SidebarPadding.Parent = Sidebar
 
 local Pages = Instance.new("Frame")
-Pages.Size = UDim2.new(1, -150, 1, -75)
-Pages.Position = UDim2.new(0, 145, 0, 70)
+Pages.Size = UDim2.new(1, -145, 1, -70)
+Pages.Position = UDim2.new(0, 143, 0, 68)
 Pages.BackgroundTransparency = 1
 Pages.ZIndex = 2
 Pages.ClipsDescendants = true
@@ -627,7 +597,7 @@ local function addBotCard(data)
     avatar.Position = UDim2.new(0, 12, 0.5, 0)
     avatar.AnchorPoint = Vector2.new(0, 0.5)
     avatar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    avatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (data.UserId or 0) .. "&w=150&h=150"
+    avatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(data.UserId or 1) .. "&w=150&h=150"
     avatar.Parent = card
     
     local avCorner = Instance.new("UICorner")
@@ -811,10 +781,10 @@ local function createSidebarBtn(name, iconId)
 end
 
 createSidebarBtn("Alts", "10734950309")
-createSidebarBtn("Teleport", "10723351910")
+createSidebarBtn("Teleport", "10723418498")
 createSidebarBtn("Buyers", "10734897102")
 createSidebarBtn("Stats", "10723398439")
-createSidebarBtn("Misc", "10723351910")
+createSidebarBtn("Misc", "10723413498")
 createSidebarBtn("Settings", "10723374431")
 
 showPage("Alts")
@@ -893,7 +863,9 @@ for _, loc in ipairs(TeleportLocations) do
     tpBtn.MouseButton1Click:Connect(function()
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = loc.Position
+            local hrp = char.HumanoidRootPart
+            local tween = TweenService:Create(hrp, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = loc.Position})
+            tween:Play()
         end
     end)
 end
