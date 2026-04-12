@@ -45,7 +45,7 @@ task.spawn(function()
             }
             writefile("status_" .. LocalPlayer.Name .. ".json", HttpService:JSONEncode(stats))
         end)
-        task.wait(2.5) -- Slightly faster heartrate
+        task.wait(2.5)
     end
 end)
 
@@ -71,8 +71,8 @@ end)
 -- NETWORK SYNC: Listen for commands from Owner PC over chat channel
 task.spawn(function()
     local function processChatCmd(msg, sender)
-        if sender.Name == getgenv().BotConfig.OwnerUsername or sender.Name == "crisperpamuk" then -- Whitelist Owner
-            if msg:match("^/e sync_bt|") then
+        if sender.Name == getgenv().BotConfig.OwnerUsername or sender.Name == "crisperpamuk" then
+            if msg:match("sync_bt|") then
                 local parts = msg:split("|")
                 local cmd = parts[2]
                 local val = parts[3]
