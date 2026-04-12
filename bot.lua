@@ -16,7 +16,8 @@ local defaults = {
     FollowOwner = false,
     DropAmount = 15000,
     AntiWhiteScreen = true,
-    WhitelistedBuyers = {}
+    WhitelistedBuyers = {},
+    AutoResetKO = true
 }
 
 for k, v in pairs(defaults) do
@@ -402,10 +403,14 @@ task.spawn(function()
     end
     
     while true do
-        if getgenv().BotConfig.ResetSignal then
+        if getgenv().BotConfig.ResetSignal or (getgenv().BotConfig.AutoResetKO and (function()
+            local be = char and char:FindFirstChild("BodyEffects")
+            return be and be:FindFirstChild("K.O") and be["K.O"].Value == true
+        end)()) then
             if char and char:FindFirstChild("Humanoid") then
                 char.Humanoid.Health = 0
             end
+            task.wait(1)
         end
         if getgenv().BotConfig.AutoDrop then
             char = LocalPlayer.Character
