@@ -287,22 +287,23 @@ end)
 
 
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 140, 1, -66)
-Sidebar.Position = UDim2.new(0, 0, 0, 66)
+Sidebar.Size = UDim2.new(0, 130, 1, -95)
+Sidebar.Position = UDim2.new(0, 12, 0, 80)
 Sidebar.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 Sidebar.BackgroundTransparency = 0
 Sidebar.BorderSizePixel = 0
 Sidebar.ZIndex = 3
 Sidebar.Parent = MainFrame
 
--- Sidebar right separator
-local sidebarSep = Instance.new("Frame")
-sidebarSep.Size = UDim2.new(0, 1, 1, -66)
-sidebarSep.Position = UDim2.new(0, 140, 0, 66)
-sidebarSep.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-sidebarSep.BorderSizePixel = 0
-sidebarSep.ZIndex = 4
-sidebarSep.Parent = MainFrame
+local sbCorner = Instance.new("UICorner")
+sbCorner.CornerRadius = UDim.new(0, 12)
+sbCorner.Parent = Sidebar
+
+local sbStroke = Instance.new("UIStroke")
+sbStroke.Color = Color3.fromRGB(30, 30, 40)
+sbStroke.Thickness = 1
+sbStroke.Transparency = 0.5
+sbStroke.Parent = Sidebar
 
 local SidebarList = Instance.new("UIListLayout")
 SidebarList.Padding = UDim.new(0, 2)
@@ -314,8 +315,8 @@ SidebarPadding.PaddingTop = UDim.new(0, 6)
 SidebarPadding.Parent = Sidebar
 
 local Pages = Instance.new("Frame")
-Pages.Size = UDim2.new(1, -145, 1, -70)
-Pages.Position = UDim2.new(0, 143, 0, 68)
+Pages.Size = UDim2.new(1, -165, 1, -85)
+Pages.Position = UDim2.new(0, 153, 0, 75)
 Pages.BackgroundTransparency = 1
 Pages.ZIndex = 2
 Pages.ClipsDescendants = true
@@ -614,8 +615,8 @@ local function createSidebarBtn(name)
     label.BackgroundTransparency = 1
     label.Text = name
     label.TextColor3 = Color3.fromRGB(130, 130, 150)
-    label.Font = Enum.Font.GothamMedium
-    label.TextSize = 13
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
     label.TextXAlignment = Enum.TextXAlignment.Center
     label.Parent = btn
     
@@ -637,13 +638,13 @@ local function createSidebarBtn(name)
         showPage(name)
         for _, b in pairs(Sidebar:GetChildren()) do
             if b:IsA("TextButton") then
-                TweenService:Create(b, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(b, TweenInfo.new(0.2), {BackgroundTransparency = 1, BackgroundColor3 = Color3.fromRGB(40, 40, 50)}):Play()
                 if b:FindFirstChild("TextLabel") then
                     TweenService:Create(b.TextLabel, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(130, 130, 150)}):Play()
                 end
             end
         end
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.8, BackgroundColor3 = Color3.fromRGB(60, 60, 80)}):Play()
         TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.new(1, 1, 1)}):Play()
     end)
     
