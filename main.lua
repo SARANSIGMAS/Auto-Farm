@@ -44,7 +44,8 @@ getgenv().BotConfig = {
     PickupRange = 65,
     Flooring = true,
     Bank = false,
-    AntiSit = true
+    AntiSit = true,
+    FloatHeight = 8
 }
 
 local function parseShorthand(str)
@@ -452,36 +453,7 @@ Pages.ZIndex = 2
 Pages.ClipsDescendants = true
 Pages.Parent = MainFrame
 
-local SidebarSelector = Instance.new("Frame")
-SidebarSelector.Name = "SidebarSelector"
-SidebarSelector.Size = UDim2.new(0, 3, 0, 24)
-SidebarSelector.Position = UDim2.new(0, 0, 0, 0)
-SidebarSelector.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-SidebarSelector.BorderSizePixel = 0
-SidebarSelector.ZIndex = 5
-SidebarSelector.Visible = false
-SidebarSelector.Parent = Sidebar
-
-local SSGlow = Instance.new("ImageLabel")
-SSGlow.Size = UDim2.new(4, 0, 2, 0)
-SSGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
-SSGlow.AnchorPoint = Vector2.new(0.5, 0.5)
-SSGlow.BackgroundTransparency = 1
-SSGlow.Image = "rbxassetid://4743306782"
-SSGlow.ImageColor3 = Color3.fromRGB(0, 120, 255)
-SSGlow.ImageTransparency = 0.6
-SSGlow.ZIndex = 4
-SSGlow.Parent = SidebarSelector
-
-task.spawn(function()
-    while true do
-        if getgenv().Kamaik_Unloaded then break end
-        local t = tick()
-        local s = 0.8 + math.sin(t * 4) * 0.2
-        SSGlow.ImageTransparency = s
-        task.wait()
-    end
-end)
+-- Sidebar removed blue selector logic
 
 local function createPage(name)
     local pageContainer = Instance.new("CanvasGroup")
@@ -746,7 +718,7 @@ end)
 local bankBtn = Instance.new("TextButton")
 bankBtn.Name = "GoBank"
 bankBtn.Size = UDim2.new(0, 140, 0, 32)
-bankBtn.BackgroundColor3 = Color3.fromRGB(0, 90, 200)
+bankBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 bankBtn.Text = "GO TO BANK"
 bankBtn.TextColor3 = Color3.new(1, 1, 1)
 bankBtn.Font = Enum.Font.GothamBold
@@ -759,10 +731,10 @@ bc.CornerRadius = UDim.new(0, 6)
 bc.Parent = bankBtn
 
 bankBtn.MouseEnter:Connect(function()
-    TweenService:Create(bankBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 120, 255)}):Play()
+    TweenService:Create(bankBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(50, 50, 60)}):Play()
 end)
 bankBtn.MouseLeave:Connect(function()
-    TweenService:Create(bankBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 90, 200)}):Play()
+    TweenService:Create(bankBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
 end)
 bankBtn.MouseButton1Click:Connect(function()
     syncConfig("GoToBank", true)
@@ -832,21 +804,89 @@ daIS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 daIS.Parent = daInput
 
 daInput.Focused:Connect(function()
-    TweenService:Create(daIS, TweenInfo.new(0.2), {Color = Color3.fromRGB(0, 100, 255)}):Play()
+    TweenService:Create(daIS, TweenInfo.new(0.2), {Color = Color3.fromRGB(0, 255, 120)}):Play()
 end)
 
-daInput.FocusLost:Connect(function()
-    TweenService:Create(daIS, TweenInfo.new(0.2), {Color = Color3.fromRGB(35, 35, 45)}):Play()
-    local val = parseShorthand(daInput.Text)
-    if val > 0 then
-        val = math.clamp(val, 1, 15000)
-        daInput.Text = formatCash(val)
-        getgenv().BotConfig.DropAmount = val
-        syncConfig("DropAmount", val)
+    end
+end)
+
+-- Float Height Input
+local floatHFrame = Instance.new("Frame")
+floatHFrame.Size = UDim2.new(1, 0, 0, 55)
+floatHFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+floatHFrame.Parent = AltsScroll
+
+local fhfCorner = Instance.new("UICorner")
+fhfCorner.CornerRadius = UDim.new(0, 8)
+fhfCorner.Parent = floatHFrame
+
+local fhfStroke = Instance.new("UIStroke")
+fhfStroke.Color = Color3.fromRGB(30, 30, 40)
+fhfStroke.Thickness = 1
+fhfStroke.Transparency = 0.5
+fhfStroke.Parent = floatHFrame
+
+local fhLabel = Instance.new("TextLabel")
+fhLabel.Size = UDim2.new(0.45, 0, 0, 20)
+fhLabel.Position = UDim2.new(0, 12, 0, 6)
+fhLabel.BackgroundTransparency = 1
+fhLabel.Text = "FLOAT HEIGHT"
+fhLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+fhLabel.Font = Enum.Font.GothamBold
+fhLabel.TextSize = 9
+fhLabel.TextXAlignment = Enum.TextXAlignment.Left
+fhLabel.Parent = floatHFrame
+
+local fhSubLabel = Instance.new("TextLabel")
+fhSubLabel.Size = UDim2.new(0, 80, 0, 14)
+fhSubLabel.Position = UDim2.new(1, -90, 0, 8)
+fhSubLabel.BackgroundTransparency = 1
+fhSubLabel.Text = "Default: 8"
+fhSubLabel.TextColor3 = Color3.fromRGB(80, 80, 100)
+fhSubLabel.Font = Enum.Font.GothamMedium
+fhSubLabel.TextSize = 8
+fhSubLabel.TextXAlignment = Enum.TextXAlignment.Right
+fhSubLabel.Parent = floatHFrame
+
+local fhInput = Instance.new("TextBox")
+fhInput.Size = UDim2.new(1, -24, 0, 24)
+fhInput.Position = UDim2.new(0, 12, 0, 26)
+fhInput.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+fhInput.Text = "8"
+fhInput.PlaceholderText = "Enter height (e.g. 15)..."
+fhInput.TextColor3 = Color3.fromRGB(0, 255, 120)
+fhInput.PlaceholderColor3 = Color3.fromRGB(60, 60, 80)
+fhInput.Font = Enum.Font.GothamBold
+fhInput.TextSize = 13
+fhInput.ClipsDescendants = true
+fhInput.Parent = floatHFrame
+
+local fhIC = Instance.new("UICorner")
+fhIC.CornerRadius = UDim.new(0, 6)
+fhIC.Parent = fhInput
+
+local fhIS = Instance.new("UIStroke")
+fhIS.Color = Color3.fromRGB(35, 35, 45)
+fhIS.Thickness = 1
+fhIS.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+fhIS.Parent = fhInput
+
+fhInput.Focused:Connect(function()
+    TweenService:Create(fhIS, TweenInfo.new(0.2), {Color = Color3.fromRGB(0, 255, 120)}):Play()
+end)
+
+fhInput.FocusLost:Connect(function()
+    TweenService:Create(fhIS, TweenInfo.new(0.2), {Color = Color3.fromRGB(35, 35, 45)}):Play()
+    local val = tonumber(fhInput.Text)
+    if val then
+        val = math.clamp(val, 0, 500)
+        fhInput.Text = tostring(val)
+        getgenv().BotConfig.FloatHeight = val
+        syncConfig("FloatHeight", val)
     else
-        daInput.Text = "15,000"
-        getgenv().BotConfig.DropAmount = 15000
-        syncConfig("DropAmount", 15000)
+        fhInput.Text = "8"
+        getgenv().BotConfig.FloatHeight = 8
+        syncConfig("FloatHeight", 8)
     end
 end)
 
@@ -900,7 +940,7 @@ for _, loc in ipairs(SetupTPs) do
     
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
-        TweenService:Create(bStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(0, 100, 200)}):Play()
+        TweenService:Create(bStroke, TweenInfo.new(0.15), {Color = Color3.fromRGB(0, 255, 120)}):Play()
     end)
     btn.MouseLeave:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(24, 24, 30)}):Play()
@@ -911,7 +951,7 @@ for _, loc in ipairs(SetupTPs) do
         getgenv().BotConfig.TargetCFrame = loc.CF
         syncConfig("TargetCFrame", loc.CF)
         -- Flash feedback
-        TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(0, 120, 255)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(0, 210, 100)}):Play()
         task.wait(0.15)
         TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 30)}):Play()
     end)
@@ -1073,7 +1113,9 @@ task.spawn(function()
                         pcall(function()
                             local content = readfile(f)
                             local data = HttpService:JSONDecode(content)
-                            if data and os.time() - (data.LastUpdate or 0) < 20 then
+                            
+                            -- Filter out local player (owner) from the bot list and stats
+                            if data and data.Name ~= LocalPlayer.Name and os.time() - (data.LastUpdate or 0) < 20 then
                                 onlineCount = onlineCount + 1
                                 if data.Status == "Dropping" then
                                     droppingCount = droppingCount + 1
@@ -1141,11 +1183,6 @@ local function createSidebarBtn(name)
 
     btn.MouseButton1Click:Connect(function()
         showPage(tabName)
-        
-        SidebarSelector.Visible = true
-        TweenService:Create(SidebarSelector, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 2, 0, btn.Position.Y.Offset + (btn.Size.Y.Offset/2) - 12)
-        }):Play()
 
         for _, b in pairs(Sidebar:GetChildren()) do
             if b:IsA("TextButton") then
@@ -1179,8 +1216,6 @@ showPage("Alts")
 task.defer(function()
     local firstBtn = Sidebar:FindFirstChildOfClass("TextButton")
     if firstBtn then
-        SidebarSelector.Visible = true
-        SidebarSelector.Position = UDim2.new(0, 2, 0, firstBtn.Position.Y.Offset + (firstBtn.Size.Y.Offset/2) - 12)
         TweenService:Create(firstBtn, TweenInfo.new(0.25), {BackgroundTransparency = 0.85, BackgroundColor3 = Color3.fromRGB(30,30,45)}):Play()
         if firstBtn:FindFirstChild("TextLabel") then
             firstBtn.TextLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -1271,49 +1306,7 @@ for _, loc in ipairs(TeleportLocations) do
     end)
 end
 
-local tpSep = Instance.new("Frame")
-tpSep.Size = UDim2.new(0.9, 0, 0, 1)
-tpSep.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-tpSep.BorderSizePixel = 0
-tpSep.Parent = Tabs.Teleport
-
-local tpBotHeader = Instance.new("TextLabel")
-tpBotHeader.Size = UDim2.new(0.95, 0, 0, 30)
-tpBotHeader.BackgroundTransparency = 1
-tpBotHeader.Text = "SEND ALL BOTS TO"
-tpBotHeader.TextColor3 = Color3.fromRGB(200, 200, 200)
-tpBotHeader.Font = Enum.Font.GothamBold
-tpBotHeader.TextSize = 12
-tpBotHeader.Parent = Tabs.Teleport
-
-for _, loc in ipairs(TeleportLocations) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.95, 0, 0, 40)
-    btn.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-    btn.Text = "  Setup Bots → " .. loc.Name
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 13
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.AutoButtonColor = false
-    btn.Parent = Tabs.Teleport
-    
-    local bc2 = Instance.new("UICorner")
-    bc2.CornerRadius = UDim.new(0, 8)
-    bc2.Parent = btn
-    
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(28, 28, 28)}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(18, 18, 18)}):Play()
-    end)
-    
-    btn.MouseButton1Click:Connect(function()
-        getgenv().BotConfig.TargetCFrame = loc.Position
-        syncConfig()
-    end)
-end
+-- Teleport section removed as requested
 
 local bringSep = Instance.new("Frame")
 bringSep.Size = UDim2.new(0.9, 0, 0, 1)
@@ -1323,7 +1316,7 @@ bringSep.Parent = Tabs.Teleport
 
 local bringBtn = Instance.new("TextButton")
 bringBtn.Size = UDim2.new(0.95, 0, 0, 40)
-bringBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+bringBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 bringBtn.Text = "Bring All Bots To Me"
 bringBtn.TextColor3 = Color3.new(1, 1, 1)
 bringBtn.Font = Enum.Font.GothamBold
@@ -1336,10 +1329,10 @@ bbCorner.CornerRadius = UDim.new(0, 8)
 bbCorner.Parent = bringBtn
 
 bringBtn.MouseEnter:Connect(function()
-    TweenService:Create(bringBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 150, 255)}):Play()
+    TweenService:Create(bringBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(50, 50, 60)}):Play()
 end)
 bringBtn.MouseLeave:Connect(function()
-    TweenService:Create(bringBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 120, 255)}):Play()
+    TweenService:Create(bringBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(35, 35, 45)}):Play()
 end)
 
 bringBtn.MouseButton1Click:Connect(function()
@@ -1377,7 +1370,7 @@ local function createToggle(parent, text, default, callback)
     btn.Size = UDim2.new(0, 40, 0, 20)
     btn.Position = UDim2.new(1, -50, 0.5, 0)
     btn.AnchorPoint = Vector2.new(0, 0.5)
-    btn.BackgroundColor3 = default and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(30, 30, 30)
+    btn.BackgroundColor3 = default and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(30, 30, 30)
     btn.Text = ""
     btn.Parent = frame
     
@@ -1399,7 +1392,7 @@ local function createToggle(parent, text, default, callback)
     local state = default
     btn.MouseButton1Click:Connect(function()
         state = not state
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(30, 30, 30)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(30, 30, 30)}):Play()
         TweenService:Create(circle, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
         callback(state)
     end)
@@ -1450,7 +1443,7 @@ local function createInput(parent, text, min, max, default, callback)
     is.Parent = input
 
     input.Focused:Connect(function()
-        TweenService:Create(is, TweenInfo.new(0.2), {Color = Color3.fromRGB(0, 100, 255)}):Play()
+        TweenService:Create(is, TweenInfo.new(0.2), {Color = Color3.fromRGB(0, 255, 120)}):Play()
     end)
     
     input.FocusLost:Connect(function()
@@ -1469,90 +1462,7 @@ end
 
 createInput(AltsScroll, "Drop Amount (Max 15k)", 1, 15000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig("DropAmount", v) end)
 
-local QuickSetup = Instance.new("Frame")
-QuickSetup.Size = UDim2.new(0.95, 0, 0, 80)
-QuickSetup.BackgroundTransparency = 1
-QuickSetup.Parent = AltsScroll
-
-local qsLabel = Instance.new("TextLabel")
-qsLabel.Size = UDim2.new(1, 0, 0, 20)
-qsLabel.BackgroundTransparency = 1
-qsLabel.Text = "AUTO SETUP PRESETS"
-qsLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
-qsLabel.Font = Enum.Font.GothamBold
-qsLabel.TextSize = 10
-qsLabel.Parent = QuickSetup
-
-local qsGrid = Instance.new("UIGridLayout")
-qsGrid.CellSize = UDim2.new(0.23, 0, 0, 35)
-qsGrid.CellPadding = UDim2.new(0.02, 0, 0, 5)
-qsGrid.Parent = QuickSetup
-
-local SetupTPs = {
-    School = CFrame.new(-548.1, 21.2, 281.4),
-    Club = CFrame.new(-266.1, -2.2, -367.2),
-    Casino = CFrame.new(-853.3, 21.3, -135.2),
-    Bank = CFrame.new(-402.12, 21.75, -283.98)
-}
-
-for name, cf in pairs(SetupTPs) do
-    local btn = Instance.new("TextButton")
-    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-    btn.Text = name:upper()
-    btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 10
-    btn.AutoButtonColor = false
-    btn.Parent = QuickSetup
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = btn
-    
-    local shadow = Instance.new("ImageLabel")
-    shadow.Name = "DropShadow"
-    shadow.Size = UDim2.new(1, 14, 1, 14)
-    shadow.Position = UDim2.new(0.5, 0, 0.5, 2)
-    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://4743306782"
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ImageTransparency = 0.5
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(35, 35, 35, 35)
-    shadow.ZIndex = btn.ZIndex - 1
-    shadow.Parent = btn
-    
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
-    end)
-    
-    btn.MouseButton1Click:Connect(function()
-        getgenv().BotConfig.TargetCFrame = cf
-        syncConfig("TargetCFrame", cf)
-    end)
-end
-
-
-local botSep = Instance.new("Frame")
-botSep.Size = UDim2.new(0.9, 0, 0, 1)
-botSep.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-botSep.BorderSizePixel = 0
-botSep.Parent = AltsScroll
-
-local botHeader = Instance.new("TextLabel")
-botHeader.Size = UDim2.new(1, 0, 0, 20)
-botHeader.BackgroundTransparency = 1
-botHeader.Text = "CONNECTED ALTS"
-botHeader.TextColor3 = Color3.fromRGB(180, 180, 180)
-botHeader.Font = Enum.Font.GothamBold
-botHeader.TextSize = 10
-botHeader.Parent = AltsScroll
-
-
+-- Redundant sections removed
 local BuyerScroll = Tabs.Buyers
 
 local searchFrame = Instance.new("Frame")
@@ -1767,73 +1677,74 @@ local function createPlayerESP(player, espFolder)
     
     local esp = Instance.new("BillboardGui")
     esp.Name = "ESP_" .. player.Name
-    esp.Size = UDim2.new(0, 145, 0, 55)
+    esp.Size = UDim2.new(0, 160, 0, 75)
     esp.AlwaysOnTop = true
     esp.Adornee = hrp
-    esp.ExtentsOffset = Vector3.new(0, 3, 0)
+    esp.ExtentsOffset = Vector3.new(0, 4.5, 0)
     esp.ResetOnSpawn = false
     esp.Parent = espFolder
     
     local frame = Instance.new("Frame")
     frame.Name = "Frame"
     frame.Size = UDim2.new(1, 0, 1, 0)
-    frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    frame.BackgroundTransparency = 0.1
+    frame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+    frame.BackgroundTransparency = 0.15
     frame.Parent = esp
     
     local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 8)
+    c.CornerRadius = UDim.new(0, 10)
     c.Parent = frame
     
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(200, 40, 40)
+    stroke.Color = Color3.fromRGB(0, 255, 120)
     stroke.Thickness = 1.5
+    stroke.Transparency = 0.4
     stroke.Parent = frame
     
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1, 0, 0, 20)
+    header.BackgroundTransparency = 1
+    header.Text = player.DisplayName:upper()
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 9
+    header.Parent = frame
+    
+    local sep = Instance.new("Frame")
+    sep.Size = UDim2.new(0.9, 0, 0, 1)
+    sep.Position = UDim2.new(0.05, 0, 0, 20)
+    sep.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    sep.BorderSizePixel = 0
+    sep.Parent = frame
+    
     local av = Instance.new("ImageLabel")
-    av.Size = UDim2.new(0, 24, 0, 24)
-    av.Position = UDim2.new(0, 10, 0.5, 0)
-    av.AnchorPoint = Vector2.new(0, 0.5)
-    av.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    av.Size = UDim2.new(0, 32, 0, 32)
+    av.Position = UDim2.new(0, 8, 0, 28)
+    av.BackgroundTransparency = 1
     av.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(player.UserId) .. "&w=150&h=150"
     av.Parent = frame
     Instance.new("UICorner", av).CornerRadius = UDim.new(1, 0)
     
-    local wVal = Instance.new("TextLabel")
-    wVal.Name = "Wallet"
-    wVal.Size = UDim2.new(1, -45, 0.33, 0)
-    wVal.Position = UDim2.new(0, 42, 0, 4)
-    wVal.BackgroundTransparency = 1
-    wVal.Text = "$0"
-    wVal.TextColor3 = Color3.new(1, 1, 1)
-    wVal.Font = Enum.Font.GothamBold
-    wVal.TextSize = 11
-    wVal.TextXAlignment = Enum.TextXAlignment.Left
-    wVal.Parent = frame
+    local function createLabel(name, pos, color, size)
+        local l = Instance.new("TextLabel")
+        l.Name = name
+        l.Size = UDim2.new(1, -50, 0, 14)
+        l.Position = pos
+        l.BackgroundTransparency = 1
+        l.Text = "$0"
+        l.TextColor3 = color
+        l.Font = Enum.Font.GothamBold
+        l.TextSize = size or 10
+        l.TextXAlignment = Enum.TextXAlignment.Left
+        l.Parent = frame
+        return l
+    end
     
-    local bVal = Instance.new("TextLabel")
-    bVal.Name = "Bank"
-    bVal.Size = UDim2.new(1, -45, 0.33, 0)
-    bVal.Position = UDim2.new(0, 42, 0.33, 2)
-    bVal.BackgroundTransparency = 1
-    bVal.Text = "$0"
-    bVal.TextColor3 = Color3.fromRGB(255, 60, 60)
-    bVal.Font = Enum.Font.GothamBold
-    bVal.TextSize = 10
-    bVal.TextXAlignment = Enum.TextXAlignment.Left
-    bVal.Parent = frame
-
-    local gVal = Instance.new("TextLabel")
-    gVal.Name = "Gained"
-    gVal.Size = UDim2.new(1, -45, 0.33, 0)
-    gVal.Position = UDim2.new(0, 42, 0.66, 0)
-    gVal.BackgroundTransparency = 1
-    gVal.Text = "+$0 Collected"
-    gVal.TextColor3 = Color3.fromRGB(0, 255, 120)
-    gVal.Font = Enum.Font.GothamBold
-    gVal.TextSize = 10
-    gVal.TextXAlignment = Enum.TextXAlignment.Left
-    gVal.Parent = frame
+    createLabel("Wallet", UDim2.new(0, 46, 0, 26), Color3.fromRGB(0, 255, 120), 11)
+    createLabel("Bank", UDim2.new(0, 46, 0, 40), Color3.fromRGB(255, 100, 255), 9)
+    
+    local gained = createLabel("Gained", UDim2.new(0, 46, 0, 56), Color3.fromRGB(0, 200, 255), 9)
+    gained.Text = "+$0 PICKED UP"
     
     return esp
 end
@@ -1913,6 +1824,7 @@ task.spawn(function()
             -- PLAYER CASH ESP
             if getgenv().BotConfig.MoneyESP then
                 local espFolder = getOrCreateESPFolder()
+                local buyers = getgenv().BotConfig.WhitelistedBuyers or {}
                 
                 for _, p in pairs(Players:GetPlayers()) do
                     if p ~= LocalPlayer then
@@ -1921,12 +1833,8 @@ task.spawn(function()
                         
                         if hrp then
                             local esp = createPlayerESP(p, espFolder)
-                            
                             if esp then
-                                -- Re-adorn in case character respawned
-                                if esp.Adornee ~= hrp then
-                                    esp.Adornee = hrp
-                                end
+                                esp.Adornee = hrp
                                 
                                 local df = p:FindFirstChild("DataFolder")
                                 if df then
@@ -1938,24 +1846,43 @@ task.spawn(function()
                                     end
                                     
                                     local gained = wallet - getgenv().InitialCashCache[p.UserId]
+                                    local isBuyer = table.find(buyers, p.UserId) or table.find(buyers, p.Name)
                                     
                                     local fr = esp:FindFirstChild("Frame")
                                     if fr then
                                         local w = fr:FindFirstChild("Wallet")
                                         local b = fr:FindFirstChild("Bank")
                                         local g = fr:FindFirstChild("Gained")
+                                        local s = fr:FindFirstChild("UIStroke")
+                                        
                                         if w then w.Text = "$" .. formatCash(wallet) end
                                         if b then b.Text = "$" .. formatCash(bank) end
-                                        if g then g.Text = "+$" .. formatCash(math.max(0, gained)) .. " Gained" end
+                                        
+                                        if g then 
+                                            local oldG = tonumber(g.Text:match("%$([%d,]+)")) or 0
+                                            g.Text = "+$" .. formatCash(math.max(0, gained)) .. " PICKED"
+                                            
+                                            -- Pulse effect on pickup
+                                            if gained > 0 and gained > oldG then
+                                                TweenService:Create(fr, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true), {BackgroundColor3 = Color3.fromRGB(0, 50, 40), BackgroundTransparency = 0}):Play()
+                                            end
+                                        end
+                                        
+                                        if s then
+                                            if isBuyer then
+                                                s.Color = Color3.fromRGB(255, 215, 0) -- Gold for buyers
+                                                s.Transparency = 0
+                                            else
+                                                s.Color = gained > 0 and Color3.fromRGB(0, 200, 255) or Color3.fromRGB(0, 255, 120)
+                                                s.Transparency = gained > 0 and 0 or 0.4
+                                            end
+                                        end
                                     end
                                 end
                             end
                         else
-                            -- Player has no character, hide ESP
                             local existing = espFolder:FindFirstChild("ESP_" .. p.Name)
-                            if existing then
-                                existing.Adornee = nil
-                            end
+                            if existing then existing.Adornee = nil end
                         end
                     end
                 end
@@ -2151,43 +2078,8 @@ createMiscBtn(Tabs.Misc, "Bring All Bots", function()
 end)
 
 
-local TeleHeader = Instance.new("TextLabel")
-TeleHeader.Size = UDim2.new(1, -20, 0, 25)
-TeleHeader.BackgroundTransparency = 1
-TeleHeader.Text = "BOT DEPLOYMENT SETUPS"
-TeleHeader.TextColor3 = Color3.fromRGB(120, 120, 140)
-TeleHeader.Font = Enum.Font.GothamBold
-TeleHeader.TextSize = 9
-TeleHeader.Parent = Tabs.Teleport
+-- Bot Deployment Setups removed as requested
 
-local SetupGrid = Instance.new("Frame")
-SetupGrid.Size = UDim2.new(1, -20, 0, 140)
-SetupGrid.BackgroundTransparency = 1
-SetupGrid.Parent = Tabs.Teleport
-
-local grid = Instance.new("UIGridLayout")
-grid.CellSize = UDim2.new(0.48, 0, 0, 40)
-grid.CellPadding = UDim2.new(0, 8, 0, 8)
-grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
-grid.Parent = SetupGrid
-
-createMiscBtn(SetupGrid, "DEPLOY -> CLUB", function()
-    local cf = CFrame.new(-266.1, -2.2, -367.2)
-    getgenv().BotConfig.TargetCFrame = cf
-    syncConfig("TargetCFrame", cf)
-end)
-
-createMiscBtn(SetupGrid, "DEPLOY -> VAULT", function()
-    local cf = CFrame.new(-489, 21, -236)
-    getgenv().BotConfig.TargetCFrame = cf
-    syncConfig("TargetCFrame", cf)
-end)
-
-createMiscBtn(SetupGrid, "DEPLOY -> BANK", function()
-    local cf = CFrame.new(-434, 34, -282)
-    getgenv().BotConfig.TargetCFrame = cf
-    syncConfig("TargetCFrame", cf)
-end)
 
 local TPHeader = Instance.new("TextLabel")
 TPHeader.Size = UDim2.new(1, -20, 0, 25)
