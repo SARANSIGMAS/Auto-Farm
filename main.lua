@@ -1585,6 +1585,8 @@ task.spawn(function()
                 local files = listfiles("")
                 local onlineCount = 0
                 local totalHp = 0
+                local workforceTotal = 0
+                local farmingCount = 0
                 local topEarner = {Name = "N/A", Cash = 0}
                 local botStats = {}
 
@@ -1594,6 +1596,8 @@ task.spawn(function()
                         if success and data and os.time() - data.LastUpdate < 20 then
                             onlineCount = onlineCount + 1
                             totalHp = totalHp + (data.Health or 100)
+                            workforceTotal = workforceTotal + (data.Cash or 0)
+                            if data.Status == "Farming" then farmingCount = farmingCount + 1 end
                             if data.Cash > topEarner.Cash then
                                 topEarner = {Name = data.Name, Cash = data.Cash}
                             end
@@ -1603,8 +1607,11 @@ task.spawn(function()
                 end
                 
                 if onlineCount > 0 then
+                    createStatRow("WORKFORCE TOTAL CASH", "$" .. tostring(workforceTotal):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(0, 255, 120))
+                    createStatRow("FARMING STATUS", tostring(farmingCount) .. " BOTS ACTIVE", Color3.fromRGB(0, 200, 255))
+                    createStatRow("ESTIMATED INCOME (MPH)", "$" .. tostring(cashHr):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(200, 255, 0))
                     createStatRow("AVG WORKFORCE HEALTH", math.floor(totalHp / onlineCount) .. "%", Color3.fromRGB(255, 100, 100))
-                    createStatRow("TOP EARNER BOT", topEarner.Name:upper() .. " ($" .. tostring(topEarner.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "") .. ")", Color3.fromRGB(200, 255, 0))
+                    createStatRow("TOP EARNER BOT", topEarner.Name:upper() .. " ($" .. tostring(topEarner.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "") .. ")", Color3.fromRGB(150, 150, 150))
                     
                     local divider = Instance.new("Frame")
                     divider.Size = UDim2.new(0.9, 0, 0, 1)
