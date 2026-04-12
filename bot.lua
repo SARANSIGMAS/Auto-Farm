@@ -9,14 +9,21 @@ local LocalPlayer = Players.LocalPlayer
 
 local HttpService = game:GetService("HttpService")
 
-getgenv().BotConfig = {
-    OwnerUsername = "",
+getgenv().BotConfig = getgenv().BotConfig or {}
+local defaults = {
+    OwnerUsername = LocalPlayer.Name,
     AutoDrop = false,
     FollowOwner = false,
     DropAmount = 15000,
     AntiWhiteScreen = true,
     WhitelistedBuyers = {}
 }
+
+for k, v in pairs(defaults) do
+    if getgenv().BotConfig[k] == nil then
+        getgenv().BotConfig[k] = v
+    end
+end
 
 task.spawn(function()
     while true do
