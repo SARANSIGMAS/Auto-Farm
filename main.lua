@@ -24,8 +24,9 @@ local function parseShorthand(str)
     return value * (multipliers[suffix] or 1)
 end
 
-local function syncConfig()
+local function syncConfig(cmdType, cmdVal)
     pcall(function()
+        -- Local File Sync (for bots on same machine)
         local config = {}
         for k, v in pairs(getgenv().BotConfig) do
             if typeof(v) == "CFrame" then
@@ -35,6 +36,20 @@ local function syncConfig()
             end
         end
         writefile("bot_control.json", HttpService:JSONEncode(config))
+
+        -- Network Sync (suppressed emotes for bots on other machines)
+        if cmdType and cmdVal ~= nil then
+            local valStr = tostring(cmdVal)
+            if typeof(cmdVal) == "CFrame" then
+                local pos = cmdVal.Position
+                valStr = string.format("%.1f,%.1f,%.1f", pos.X, pos.Y, pos.Z)
+            end
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local ME = ReplicatedStorage:FindFirstChild("MainEvent")
+            if ME then
+                ME:FireServer("SayMessageRequest", "/e sync_bt|" .. tostring(cmdType) .. "|" .. valStr, "All")
+            end
+        end
     end)
 end
 
@@ -140,26 +155,25 @@ MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
 local MainGlow = Instance.new("ImageLabel")
-MainGlow.Name = "Glow"
-MainGlow.Size = UDim2.new(1, 40, 1, 40)
+MainGlow.Name = "BloomGlow"
+MainGlow.Size = UDim2.new(1, 150, 1, 150)
 MainGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainGlow.AnchorPoint = Vector2.new(0.5, 0.5)
 MainGlow.BackgroundTransparency = 1
-MainGlow.Image = "rbxassetid://4743306782"
-MainGlow.ImageColor3 = Color3.fromRGB(0, 150, 255)
-MainGlow.ImageTransparency = 0.3
-MainGlow.ScaleType = Enum.ScaleType.Slice
-MainGlow.SliceCenter = Rect.new(35, 35, 35, 35)
+MainGlow.Image = "rbxassetid://1316045217"
+MainGlow.ImageColor3 = Color3.fromRGB(255, 255, 255)
+MainGlow.ImageTransparency = 0.6
 MainGlow.ZIndex = 0
 MainGlow.Parent = MainFrame
 
-MainGlow.ImageColor3 = Color3.fromRGB(0, 150, 255)
-MainStroke.Color = Color3.fromRGB(0, 150, 255)
-MainStroke.Transparency = 0.2
+local glowTween = TweenService:Create(MainGlow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    ImageTransparency = 0.85,
+    Size = UDim2.new(1, 120, 1, 120)
+})
+glowTween:Play()
 
-local glowTweenInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-TweenService:Create(MainGlow, glowTweenInfo, {ImageTransparency = 0.7}):Play()
-TweenService:Create(MainStroke, glowTweenInfo, {Transparency = 0.8}):Play()
+MainStroke.Color = Color3.fromRGB(60, 60, 70)
+MainStroke.Transparency = 0.5
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
@@ -790,7 +804,7 @@ bringBtn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         getgenv().BotConfig.TargetCFrame = char.HumanoidRootPart.CFrame
-        syncConfig()
+        syncConfig("TargetCFrame", char.HumanoidRootPart.CFrame)
     end
 end)
 
@@ -909,10 +923,10 @@ local function createInput(parent, text, min, max, default, callback)
     end)
 end
 
-createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig() end)
-createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig() end)
-createToggle(Tabs.Alts, "Auto Reset if KO'd", true, function(v) getgenv().BotConfig.AutoResetKO = v; syncConfig() end)
-createInput(Tabs.Alts, "Drop Amount (Max 15k)", 1, 15000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
+createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig("AutoDrop", v) end)
+createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig("FollowOwner", v) end)
+createToggle(Tabs.Alts, "Auto Reset if KO'd", true, function(v) getgenv().BotConfig.AutoResetKO = v; syncConfig("AutoResetKO", v) end)
+createInput(Tabs.Alts, "Drop Amount (Max 15k)", 1, 15000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig("DropAmount", v) end)
 
 local QuickSetup = Instance.new("Frame")
 QuickSetup.Size = UDim2.new(0.95, 0, 0, 80)
@@ -977,7 +991,7 @@ for name, cf in pairs(SetupTPs) do
     
     btn.MouseButton1Click:Connect(function()
         getgenv().BotConfig.TargetCFrame = cf
-        syncConfig()
+        syncConfig("TargetCFrame", cf)
     end)
 end
 
@@ -1028,7 +1042,7 @@ local function updateBuyerList()
         
         del.MouseButton1Click:Connect(function()
             table.remove(getgenv().BotConfig.WhitelistedBuyers, i)
-            syncConfig()
+            syncConfig("WhitelistedBuyers", getgenv().BotConfig.WhitelistedBuyers)
             updateBuyerList()
         end)
     end
@@ -1074,7 +1088,7 @@ addBtn.MouseButton1Click:Connect(function()
     if buyerInput.Text ~= "" then
         table.insert(getgenv().BotConfig.WhitelistedBuyers, buyerInput.Text)
         buyerInput.Text = ""
-        syncConfig()
+        syncConfig("WhitelistedBuyers", getgenv().BotConfig.WhitelistedBuyers)
         updateBuyerList()
     end
 end)
@@ -1199,16 +1213,17 @@ end
 
 createMiscBtn(Tabs.Misc, "Reset All Bots", function()
     getgenv().BotConfig.ResetSignal = true
-    syncConfig()
+    syncConfig("ResetSignal", true)
     task.wait(1)
     getgenv().BotConfig.ResetSignal = false
-    syncConfig()
+    syncConfig("ResetSignal", false)
 end)
 
 createMiscBtn(Tabs.Misc, "Bring All Bots", function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        getgenv().BotConfig.TargetCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
-        syncConfig()
+        local cf = LocalPlayer.Character.HumanoidRootPart.CFrame
+        getgenv().BotConfig.TargetCFrame = cf
+        syncConfig("TargetCFrame", cf)
     end
 end)
 
@@ -1228,7 +1243,7 @@ createMiscBtn(Tabs.Misc, "Server Hop", function()
     end
 end)
 
-createToggle(Tabs.Settings, "Broadcast Anti-White Screen", true, function(v) getgenv().BotConfig.AntiWhiteScreen = v; syncConfig() end)
+createToggle(Tabs.Settings, "Broadcast Anti-White Screen", true, function(v) getgenv().BotConfig.AntiWhiteScreen = v; syncConfig("AntiWhiteScreen", v) end)
 
 local ToggleKey = Enum.KeyCode.RightShift
 
