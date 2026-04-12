@@ -136,8 +136,33 @@ MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
 MainStroke.Color = Color3.fromRGB(40, 40, 40)
-MainStroke.Thickness = 1
+MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
+
+local MainGlow = Instance.new("ImageLabel")
+MainGlow.Name = "Glow"
+MainGlow.Size = UDim2.new(1, 40, 1, 40)
+MainGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+MainGlow.BackgroundTransparency = 1
+MainGlow.Image = "rbxassetid://4743306782"
+MainGlow.ImageColor3 = Color3.fromRGB(0, 150, 255)
+MainGlow.ImageTransparency = 0.3
+MainGlow.ScaleType = Enum.ScaleType.Slice
+MainGlow.SliceCenter = Rect.new(35, 35, 35, 35)
+MainGlow.ZIndex = 0
+MainGlow.Parent = MainFrame
+
+task.spawn(function()
+    local hue = 0
+    while task.wait() do
+        hue = hue + 0.0015
+        if hue >= 1 then hue = 0 end
+        local c = Color3.fromHSV(hue, 0.7, 1)
+        MainGlow.ImageColor3 = c
+        MainStroke.Color = c
+    end
+end)
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
@@ -1267,25 +1292,37 @@ createKeybind(Tabs.Settings, "Toggle GUI Keybind", ToggleKey, function(key)
     ToggleKey = key
 end)
 
-local dragStart, startPos, dragging
+local dragToggle, dragInput, dragStart, dragPos
+local dragSpeed = 0.1
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    local position = UDim2.new(dragPos.X.Scale, dragPos.X.Offset + delta.X, dragPos.Y.Scale, dragPos.Y.Offset + delta.Y)
+    TweenService:Create(MainFrame, TweenInfo.new(dragSpeed, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Position = position}):Play()
+end
+
 MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+        dragToggle = true
         dragStart = input.Position
-        startPos = MainFrame.Position
+        dragPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragToggle = false
+            end
+        end)
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
     end
 end)
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+game:GetService("RunService").RenderStepped:Connect(function()
+    if dragToggle and dragInput then
+        updateInput(dragInput)
     end
 end)
 
@@ -1299,9 +1336,9 @@ UserInputService.InputBegan:Connect(function(input, gpe)
         isGuiVisible = not isGuiVisible
         if isGuiVisible then
             MainFrame.Visible = true
-            TweenService:Create(MainScale, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+            TweenService:Create(MainScale, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
         else
-            local t = TweenService:Create(MainScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Scale = 0})
+            local t = TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Scale = 0})
             t:Play()
             t.Completed:Connect(function()
                 if not isGuiVisible then MainFrame.Visible = false end
