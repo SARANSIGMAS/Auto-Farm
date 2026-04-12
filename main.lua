@@ -885,6 +885,41 @@ for _, loc in ipairs(TeleportLocations) do
     end)
 end
 
+local bringSep = Instance.new("Frame")
+bringSep.Size = UDim2.new(0.9, 0, 0, 1)
+bringSep.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+bringSep.BorderSizePixel = 0
+bringSep.Parent = Tabs.Teleport
+
+local bringBtn = Instance.new("TextButton")
+bringBtn.Size = UDim2.new(0.95, 0, 0, 40)
+bringBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+bringBtn.Text = "Bring All Bots To Me"
+bringBtn.TextColor3 = Color3.new(1, 1, 1)
+bringBtn.Font = Enum.Font.GothamBold
+bringBtn.TextSize = 13
+bringBtn.AutoButtonColor = false
+bringBtn.Parent = Tabs.Teleport
+
+local bbCorner = Instance.new("UICorner")
+bbCorner.CornerRadius = UDim.new(0, 8)
+bbCorner.Parent = bringBtn
+
+bringBtn.MouseEnter:Connect(function()
+    TweenService:Create(bringBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 150, 255)}):Play()
+end)
+bringBtn.MouseLeave:Connect(function()
+    TweenService:Create(bringBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(0, 120, 255)}):Play()
+end)
+
+bringBtn.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        getgenv().BotConfig.TargetCFrame = char.HumanoidRootPart.CFrame
+        syncConfig()
+    end
+end)
+
 local function createToggle(parent, text, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0.95, 0, 0, 40)
@@ -1337,8 +1372,23 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
+local MainScale = Instance.new("UIScale")
+MainScale.Scale = 1
+MainScale.Parent = MainFrame
+
+local isGuiVisible = true
 UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.End then
-        MainFrame.Visible = not MainFrame.Visible
+    if not gpe and input.KeyCode == Enum.KeyCode.RightShift then
+        isGuiVisible = not isGuiVisible
+        if isGuiVisible then
+            MainFrame.Visible = true
+            TweenService:Create(MainScale, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        else
+            local t = TweenService:Create(MainScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Scale = 0})
+            t:Play()
+            t.Completed:Connect(function()
+                if not isGuiVisible then MainFrame.Visible = false end
+            end)
+        end
     end
 end)
