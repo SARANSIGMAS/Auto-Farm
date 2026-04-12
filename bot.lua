@@ -29,6 +29,8 @@ end
 task.spawn(function()
     while true do
         pcall(function()
+            local char = LocalPlayer.Character
+            local hum = char and char:FindFirstChild("Humanoid")
             local df = LocalPlayer:FindFirstChild("DataFolder")
             local stats = {
                 Name = LocalPlayer.Name,
@@ -36,13 +38,14 @@ task.spawn(function()
                 UserId = LocalPlayer.UserId,
                 Cash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0,
                 BankCash = df and df:FindFirstChild("Bank") and df.Bank.Value or 0,
-                Health = math.floor(LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health or 0),
+                Health = math.floor(hum and hum.Health or 0),
+                MaxHealth = math.floor(hum and hum.MaxHealth or 100),
                 Status = getgenv().BotConfig and getgenv().BotConfig.AutoDrop and "Dropping" or "Idle",
                 LastUpdate = os.time()
             }
             writefile("status_" .. LocalPlayer.Name .. ".json", HttpService:JSONEncode(stats))
         end)
-        task.wait(3)
+        task.wait(2.5) -- Slightly faster heartrate
     end
 end)
 
@@ -425,9 +428,14 @@ RunService.Heartbeat:Connect(function(dt)
         end
         
         if targetCF then
-            -- Smoother damping: 0.2 factor for snappier but still silky movement
-            local lerpFactor = math.clamp(0.2 * (dt * 60), 0, 1)
+            -- Smoother damping: 0.15 for extremely silky follow behavior
+            local lerpFactor = math.clamp(0.15 * (dt * 60), 0, 1)
             hrp.CFrame = hrp.CFrame:Lerp(targetCF, lerpFactor)
+            
+            -- Keep platform under bot during follow
+            if currentPlatform then
+                currentPlatform.CFrame = hrp.CFrame * CFrame.new(0, -4, 0)
+            end
         end
     end)
 end)
