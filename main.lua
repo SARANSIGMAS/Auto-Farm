@@ -216,7 +216,7 @@ local function createPage(name)
     page.BackgroundTransparency = 1
     page.BorderSizePixel = 0
     page.CanvasSize = UDim2.new(0, 0, 0, 0)
-    page.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
+    page.AutomaticCanvasSize = Enum.AutomaticSize.Y
     page.ScrollBarThickness = 2
     page.Visible = false
     page.Parent = Pages
@@ -297,7 +297,7 @@ BotScroll.Position = UDim2.new(0, 0, 0, 55)
 BotScroll.BackgroundTransparency = 1
 BotScroll.BorderSizePixel = 0
 BotScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-BotScroll.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
+BotScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 BotScroll.ScrollBarThickness = 2
 BotScroll.Parent = Tabs.Alts
 
