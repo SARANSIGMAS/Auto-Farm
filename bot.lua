@@ -143,20 +143,12 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -20, 0, 20)
 Title.Position = UDim2.new(0, 10, 0, 10)
 Title.BackgroundTransparency = 1
-Title.Text = "DA HOOD BOT [V1.3]"
-Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Text = "DA HOOD BOT [V1.4]"
+Title.TextColor3 = Color3.fromRGB(200, 200, 200)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 10
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Dashboard
-
-local TitleGradient = Instance.new("UIGradient")
-TitleGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(200, 200, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
-})
-TitleGradient.Rotation = 90
-TitleGradient.Parent = Title
 
 local StatusLight = Instance.new("Frame")
 StatusLight.Size = UDim2.new(0, 6, 0, 6)
@@ -216,22 +208,13 @@ local function notify(msg)
         t.Size = UDim2.new(1, 0, 0, 15)
         t.BackgroundTransparency = 1
         t.Text = tostring(msg)
-        t.TextColor3 = Color3.new(1, 1, 1)
+        t.TextColor3 = Color3.fromRGB(0, 255, 100)
         t.Font = Enum.Font.GothamMedium
         t.TextSize = 12
         t.TextXAlignment = Enum.TextXAlignment.Left
         t.TextTransparency = 1
         t.RichText = true
         t.Parent = NotifyFrame
-        
-        local g = Instance.new("UIGradient")
-        g.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 0)),
-            ColorSequenceKeypoint.new(0.5, Color3.new(1, 1, 1)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 150))
-        })
-        g.Rotation = 90
-        g.Parent = t
         
         TweenService:Create(t, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
         task.wait(4)
@@ -331,7 +314,7 @@ local function updateFormation()
     local startX = -((totalCols - 1) * 2.5)
     
     -- Forms neat rows of 5, pushing 5 studs back per row
-    formationOffset = Vector3.new(startX + (col * 5), 5, 6 + (row * 5))
+    formationOffset = Vector3.new(startX + (col * 5), 2, 6 + (row * 5))
 end
 
 Players.PlayerAdded:Connect(updateFormation)
@@ -390,7 +373,7 @@ local function setupAtLocation(targetCFrame)
     -- Phase 3: Smooth descent to hover height
     local char2 = LocalPlayer.Character
     if char2 and char2:FindFirstChild("HumanoidRootPart") then
-        local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 7, formationOffset.Z)
+        local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 2, formationOffset.Z)
         local descentTween = TweenService:Create(char2.HumanoidRootPart, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {CFrame = hoverCF})
         descentTween:Play()
         descentTween.Completed:Wait()
@@ -426,7 +409,7 @@ RunService.Heartbeat:Connect(function(dt)
                 targetCF = owner.Character.HumanoidRootPart.CFrame * CFrame.new(formationOffset)
             end
         elseif getgenv().BotConfig.TargetCFrame then
-            targetCF = getgenv().BotConfig.TargetCFrame * CFrame.new(formationOffset.X, 7, formationOffset.Z)
+            targetCF = getgenv().BotConfig.TargetCFrame * CFrame.new(formationOffset.X, 2, formationOffset.Z)
         end
         
         if targetCF then
