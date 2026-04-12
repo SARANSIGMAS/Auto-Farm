@@ -5,6 +5,27 @@ local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
+local task = task
+local HttpService = game:GetService("HttpService")
+
+task.spawn(function()
+    while true do
+        pcall(function()
+            local df = LocalPlayer:FindFirstChild("DataFolder")
+            local stats = {
+                Name = LocalPlayer.Name,
+                DisplayName = LocalPlayer.DisplayName,
+                Cash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0,
+                Health = math.floor(LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health or 0),
+                Status = getgenv().BotConfig and getgenv().BotConfig.AutoDrop and "Farming" or "Idle",
+                LastUpdate = os.time()
+            }
+            writefile("status_" .. LocalPlayer.Name .. ".json", HttpService:JSONEncode(stats))
+        end)
+        task.wait(3)
+    end
+end)
+
 getgenv().BotConfig = {
     OwnerUsername = LocalPlayer.Name,
     AutoDrop = false,
@@ -12,6 +33,24 @@ getgenv().BotConfig = {
     DropAmount = 15000,
     AntiWhiteScreen = true
 }
+
+task.spawn(function()
+    while true do
+        pcall(function()
+            local df = LocalPlayer:FindFirstChild("DataFolder")
+            local stats = {
+                Name = LocalPlayer.Name,
+                DisplayName = LocalPlayer.DisplayName,
+                Cash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0,
+                Health = math.floor(LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health or 0),
+                Status = getgenv().BotConfig.AutoDrop and "Farming" or "Idle",
+                LastUpdate = os.time()
+            }
+            writefile("status_" .. LocalPlayer.Name .. ".json", HttpService:JSONEncode(stats))
+        end)
+        task.wait(3)
+    end
+end)
 
 local function syncConfig()
     pcall(function()
@@ -31,19 +70,39 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 620, 0, 440)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.BorderSizePixel = 0
-MainFrame.Active = true -- Allow dragging
+MainFrame.Active = true
+MainFrame.ZIndex = 2
 MainFrame.Parent = ScreenGui
+
+local Glow = Instance.new("ImageLabel")
+Glow.Size = UDim2.new(1, 150, 1, 150)
+Glow.Position = UDim2.new(0.5, 0, 0.5, 0)
+Glow.AnchorPoint = Vector2.new(0.5, 0.5)
+Glow.BackgroundTransparency = 1
+Glow.Image = "rbxassetid://4975687002"
+Glow.ImageColor3 = Color3.fromRGB(0, 80, 255)
+Glow.ImageTransparency = 0.5
+Glow.ZIndex = 1
+Glow.Parent = MainFrame
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 14)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(35, 35, 35)
-MainStroke.Thickness = 1.2
+MainStroke.Color = Color3.fromRGB(40, 40, 40)
+MainStroke.Thickness = 2
 MainStroke.Parent = MainFrame
+
+local strokeGradient = Instance.new("UIGradient")
+strokeGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 30, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 120, 255))
+})
+strokeGradient.Parent = MainStroke
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, -20, 0, 60)
@@ -201,8 +260,163 @@ local Tabs = {
 
 local function showPage(name)
     for _, p in pairs(Tabs) do p.Visible = false end
-    Tabs[name].Visible = true
+    if Tabs[name] then Tabs[name].Visible = true end
 end
+
+local StatsRow = Instance.new("Frame")
+StatsRow.Size = UDim2.new(0.95, 0, 0, 45)
+StatsRow.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+StatsRow.Parent = Tabs.Alts
+
+local src = Instance.new("UICorner")
+src.CornerRadius = UDim.new(0, 8)
+src.Parent = StatsRow
+
+local StatLayout = Instance.new("UIListLayout")
+StatLayout.FillDirection = Enum.FillDirection.Horizontal
+StatLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+StatLayout.Padding = UDim.new(0, 15)
+StatLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+StatLayout.Parent = StatsRow
+
+local function createStat(label, value, color)
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(0, 110, 0, 35)
+    f.BackgroundTransparency = 1
+    f.Parent = StatsRow
+    
+    local v = Instance.new("TextLabel")
+    v.Name = "Value"
+    v.Size = UDim2.new(1, 0, 0, 20)
+    v.Position = UDim2.new(0, 0, 0, 0)
+    v.BackgroundTransparency = 1
+    v.Text = value
+    v.TextColor3 = color or Color3.new(1, 1, 1)
+    v.Font = Enum.Font.GothamBold
+    v.TextSize = 14
+    v.Parent = f
+    
+    local l = Instance.new("TextLabel")
+    l.Size = UDim2.new(1, 0, 0, 15)
+    l.Position = UDim2.new(0, 0, 0, 18)
+    l.BackgroundTransparency = 1
+    l.Text = label
+    l.TextColor3 = Color3.fromRGB(150, 150, 150)
+    l.Font = Enum.Font.GothamMedium
+    l.TextSize = 10
+    l.Parent = f
+    return v
+end
+
+local onlineStat = createStat("ONLINE BOTS", "0")
+local droppingStat = createStat("DROPPING", "0", Color3.fromRGB(0, 255, 100))
+local totalCashStat = createStat("TOTAL CASH", "$0")
+
+local BotScroll = Instance.new("ScrollingFrame")
+BotScroll.Size = UDim2.new(1, 0, 1, -55)
+BotScroll.Position = UDim2.new(0, 0, 0, 55)
+BotScroll.BackgroundTransparency = 1
+BotScroll.BorderSizePixel = 0
+BotScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+BotScroll.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
+BotScroll.ScrollBarThickness = 2
+BotScroll.Parent = Tabs.Alts
+
+local blist = Instance.new("UIListLayout")
+blist.Padding = UDim.new(0, 8)
+blist.Parent = BotScroll
+
+local function addBotCard(data)
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(0.95, 0, 0, 75)
+    card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    card.Parent = BotScroll
+
+local function addBotCard(data)
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(0.95, 0, 0, 80)
+    card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    card.Parent = Tabs.Buyers -- Reusing Buyers as a dashboard for now or I'll make Dashboard
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 10)
+    c.Parent = card
+    
+    local s = Instance.new("UIStroke")
+    s.Color = data.Health < 50 and Color3.new(1, 0, 0) or Color3.fromRGB(0, 255, 0)
+    s.Thickness = 1
+    s.Parent = card
+    
+    local name = Instance.new("TextLabel")
+    name.Position = UDim2.new(0, 15, 0, 10)
+    name.Size = UDim2.new(1, -30, 0, 20)
+    name.BackgroundTransparency = 1
+    name.Text = data.DisplayName .. " (@" .. data.Name .. ")"
+    name.TextColor3 = Color3.new(1, 1, 1)
+    name.Font = Enum.Font.GothamBold
+    name.TextSize = 14
+    name.TextXAlignment = Enum.TextXAlignment.Left
+    name.Parent = card
+    
+    local cash = Instance.new("TextLabel")
+    cash.Position = UDim2.new(0, 15, 0, 32)
+    cash.Size = UDim2.new(0.5, 0, 0, 18)
+    cash.BackgroundTransparency = 1
+    cash.Text = "Cash: $" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+    cash.TextColor3 = Color3.fromRGB(0, 255, 100)
+    cash.Font = Enum.Font.GothamMedium
+    cash.TextSize = 12
+    cash.TextXAlignment = Enum.TextXAlignment.Left
+    cash.Parent = card
+    
+    local health = Instance.new("TextLabel")
+    health.Position = UDim2.new(0, 15, 0, 52)
+    health.Size = UDim2.new(0.5, 0, 0, 18)
+    health.BackgroundTransparency = 1
+    health.Text = "Health: " .. data.Health .. "%"
+    health.TextColor3 = Color3.fromRGB(200, 200, 200)
+    health.Font = Enum.Font.GothamMedium
+    health.TextSize = 11
+    health.TextXAlignment = Enum.TextXAlignment.Left
+    health.Parent = card
+end
+
+task.spawn(function()
+    while task.wait(3) do
+        if isfolder and listfiles then
+            pcall(function()
+                BotScroll:ClearAllChildren()
+                local l = Instance.new("UIListLayout")
+                l.Padding = UDim.new(0, 8)
+                l.Parent = BotScroll
+                
+                local files = listfiles("")
+                local onlineCount = 0
+                local droppingCount = 0
+                local totalCash = 0
+                
+                for _, f in pairs(files) do
+                    if f:match("status_.*%.json") then
+                        local content = readfile(f)
+                        local data = HttpService:JSONDecode(content)
+                        if os.time() - data.LastUpdate < 15 then 
+                            onlineCount = onlineCount + 1
+                            if data.Status == "Farming" then
+                                droppingCount = droppingCount + 1
+                            end
+                            totalCash = totalCash + data.Cash
+                            addBotCard(data)
+                        end
+                    end
+                end
+                
+                onlineStat.Text = tostring(onlineCount)
+                droppingStat.Text = tostring(droppingCount)
+                totalCashStat.Text = "$" .. tostring(totalCash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+            end)
+        end
+    end
+end)
 
 local function createSidebarBtn(name, iconId)
     local btn = Instance.new("TextButton")
@@ -387,6 +601,19 @@ Tabs.Alts:AddParagraph({Title = "Bot Control", Content = "Configure your bots be
 createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig() end)
 createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig() end)
 createSlider(Tabs.Alts, "Drop Amount", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
+
+Tabs.Misc:AddParagraph({Title = "Mass Commands", Content = "Control all bots at once."})
+createMiscBtn(Tabs.Misc, "Reset All Bots", function()
+    getgenv().BotConfig.ResetSignal = true
+    syncConfig()
+    task.wait(1)
+    getgenv().BotConfig.ResetSignal = false
+    syncConfig()
+end)
+createMiscBtn(Tabs.Misc, "Bring All Bots", function()
+    getgenv().BotConfig.TargetCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+    syncConfig()
+end)
 
 Tabs.Misc:AddParagraph({Title = "Utilities", Content = "Standard game utilities."})
 createMiniBtn = nil -- Cleanup local
