@@ -134,10 +134,19 @@ DropShadow.ZIndex = 0
 local MainBlur = Instance.new("Frame")
 MainBlur.Name = "GlassLayer"
 MainBlur.Size = UDim2.new(1, 0, 1, 0)
-MainBlur.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MainBlur.BackgroundTransparency = 0.8
+MainBlur.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainBlur.BackgroundTransparency = 0.5
 MainBlur.ZIndex = 1
 MainBlur.Parent = MainFrame
+
+local MainGrad = Instance.new("UIGradient")
+MainGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 20)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(12, 12, 18)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 28))
+})
+MainGrad.Rotation = 45
+MainGrad.Parent = MainBlur
 
 local mbCorner = Instance.new("UICorner")
 mbCorner.CornerRadius = UDim.new(0, 14)
@@ -213,11 +222,19 @@ MainStroke.Transparency = 0.6
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
 Topbar.Position = UDim2.new(0, 0, 0, 0)
-Topbar.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+Topbar.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 Topbar.BackgroundTransparency = 0
 Topbar.BorderSizePixel = 0
 Topbar.ZIndex = 5
 Topbar.Parent = MainFrame
+
+local topGrad = Instance.new("UIGradient")
+topGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(22, 22, 28)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 20))
+})
+topGrad.Rotation = 90
+topGrad.Parent = Topbar
 
 local topCorner = Instance.new("UICorner")
 topCorner.CornerRadius = UDim.new(0, 14)
@@ -520,21 +537,33 @@ local function createMasterToggle(parent, text, configKey)
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
     
-    local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(0, 8, 0, 8)
-    indicator.Position = UDim2.new(1, -15, 0.5, 0)
-    indicator.AnchorPoint = Vector2.new(0.5, 0.5)
-    indicator.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    indicator.Parent = btn
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(0, 36, 0, 18)
+    track.Position = UDim2.new(1, -42, 0.5, 0)
+    track.AnchorPoint = Vector2.new(0, 0.5)
+    track.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    track.Parent = btn
     
-    local ic = Instance.new("UICorner")
-    ic.CornerRadius = UDim.new(1, 0)
-    ic.Parent = indicator
+    local tc = Instance.new("UICorner")
+    tc.CornerRadius = UDim.new(1, 0)
+    tc.Parent = track
+    
+    local circle = Instance.new("Frame")
+    circle.Size = UDim2.new(0, 14, 0, 14)
+    circle.Position = UDim2.new(0, 2, 0.5, 0)
+    circle.AnchorPoint = Vector2.new(0, 0.5)
+    circle.BackgroundColor3 = Color3.new(1, 1, 1)
+    circle.Parent = track
+    
+    local cc = Instance.new("UICorner")
+    cc.CornerRadius = UDim.new(1, 0)
+    cc.Parent = circle
 
     local function update()
         local enabled = getgenv().BotConfig[configKey]
-        TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = enabled and Color3.new(1,1,1) or Color3.fromRGB(140, 140, 160)}):Play()
-        TweenService:Create(indicator, TweenInfo.new(0.2), {BackgroundColor3 = enabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(40, 40, 50)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.25), {TextColor3 = enabled and Color3.new(1,1,1) or Color3.fromRGB(140, 140, 160)}):Play()
+        TweenService:Create(track, TweenInfo.new(0.25), {BackgroundColor3 = enabled and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 50)}):Play()
+        TweenService:Create(circle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = enabled and UDim2.new(1, -16, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
     end
 
     btn.MouseButton1Click:Connect(function()
@@ -1015,34 +1044,34 @@ local function createToggle(parent, text, default, callback)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
     
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 40, 0, 20)
-    btn.Position = UDim2.new(1, -50, 0.5, 0)
-    btn.AnchorPoint = Vector2.new(0, 0.5)
-    btn.BackgroundColor3 = default and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(30, 30, 30)
-    btn.Text = ""
-    btn.Parent = frame
+    local track = Instance.new("TextButton")
+    track.Size = UDim2.new(0, 38, 0, 20)
+    track.Position = UDim2.new(1, -53, 0.5, 0)
+    track.AnchorPoint = Vector2.new(0, 0.5)
+    track.BackgroundColor3 = default and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(30, 30, 40)
+    track.Text = ""
+    track.Parent = frame
     
     local bc = Instance.new("UICorner")
-    bc.CornerRadius = UDim.new(1, 0)
-    bc.Parent = btn
+    bc.CornerRadius = UDim.new(1, 0) -- Pill shape
+    bc.Parent = track
     
     local circle = Instance.new("Frame")
     circle.Size = UDim2.new(0, 16, 0, 16)
     circle.Position = default and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
     circle.AnchorPoint = Vector2.new(0, 0.5)
     circle.BackgroundColor3 = Color3.new(1, 1, 1)
-    circle.Parent = btn
+    circle.Parent = track
     
     local cc = Instance.new("UICorner")
     cc.CornerRadius = UDim.new(1, 0)
     cc.Parent = circle
     
     local state = default
-    btn.MouseButton1Click:Connect(function()
+    track.MouseButton1Click:Connect(function()
         state = not state
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(30, 30, 30)}):Play()
-        TweenService:Create(circle, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
+        TweenService:Create(track, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = state and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(30, 30, 40)}):Play()
+        TweenService:Create(circle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = state and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
         callback(state)
     end)
 end
