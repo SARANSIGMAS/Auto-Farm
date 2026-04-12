@@ -112,16 +112,8 @@ MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
 MainStroke.Color = Color3.fromRGB(40, 40, 40)
-MainStroke.Thickness = 2
+MainStroke.Thickness = 1
 MainStroke.Parent = MainFrame
-
-local strokeGradient = Instance.new("UIGradient")
-strokeGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 30, 60)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 120, 255))
-})
-strokeGradient.Parent = MainStroke
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
@@ -418,12 +410,12 @@ Sidebar.Parent = MainFrame
 
 -- Sidebar right separator
 local sidebarSep = Instance.new("Frame")
-sidebarSep.Size = UDim2.new(0, 1, 1, -10)
-sidebarSep.Position = UDim2.new(1, 0, 0, 5)
+sidebarSep.Size = UDim2.new(0, 1, 1, -66)
+sidebarSep.Position = UDim2.new(0, 140, 0, 66)
 sidebarSep.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 sidebarSep.BorderSizePixel = 0
 sidebarSep.ZIndex = 4
-sidebarSep.Parent = Sidebar
+sidebarSep.Parent = MainFrame
 
 local SidebarList = Instance.new("UIListLayout")
 SidebarList.Padding = UDim.new(0, 2)
