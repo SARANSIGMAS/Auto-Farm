@@ -7,9 +7,10 @@ local LocalPlayer = Players.LocalPlayer
 
 local SessionStart = os.time()
 local InitialCash = 0
-pcall(function()
-    local df = LocalPlayer:FindFirstChild("DataFolder")
-    InitialCash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0
+task.spawn(function()
+    repeat task.wait() until LocalPlayer:FindFirstChild("DataFolder")
+    local df = LocalPlayer.DataFolder
+    InitialCash = df:FindFirstChild("Currency") and df.Currency.Value or 0
 end)
 
 getgenv().BotConfig = {
@@ -84,7 +85,9 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KamaikMaster"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-ScreenGui.Parent = CoreGui
+
+local container = (gethui and gethui()) or (game:GetService("CoreGui"):FindFirstChild("RobloxGui")) or game:GetService("CoreGui")
+ScreenGui.Parent = container
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 620, 0, 440)
@@ -1420,24 +1423,31 @@ end)
 local MainScale = Instance.new("UIScale")
 MainScale.Scale = 0.9
 MainFrame.BackgroundTransparency = 1
-MainFrame.Visible = false
+MainFrame.Visible = true -- Start visible
 
-local isGuiVisible = false
+local isGuiVisible = true
+local function toggleGui(visible)
+    isGuiVisible = visible
+    if isGuiVisible then
+        MainFrame.Visible = true
+        MainFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
+        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0), BackgroundTransparency = 0}):Play()
+        TweenService:Create(MainScale, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
+    else
+        TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.55, 0), BackgroundTransparency = 1}):Play()
+        local t = TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Scale = 0.9})
+        t:Play()
+        t.Completed:Connect(function()
+            if not isGuiVisible then MainFrame.Visible = false end
+        end)
+    end
+end
+
+-- Play startup animation
+toggleGui(true)
+
 UserInputService.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == ToggleKey then
-        isGuiVisible = not isGuiVisible
-        if isGuiVisible then
-            MainFrame.Visible = true
-            MainFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
-            TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0), BackgroundTransparency = 0}):Play()
-            TweenService:Create(MainScale, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
-        else
-            TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.55, 0), BackgroundTransparency = 1}):Play()
-            local t = TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Scale = 0.9})
-            t:Play()
-            t.Completed:Connect(function()
-                if not isGuiVisible then MainFrame.Visible = false end
-            end)
-        end
+        toggleGui(not isGuiVisible)
     end
 end)
