@@ -277,7 +277,7 @@ WelcomeLabel.Parent = Topbar
 
 local SubLabel = Instance.new("TextLabel")
 SubLabel.Size = UDim2.new(0, 200, 0, 14)
-SubLabel.Position = UDim2.new(0, 65, 0, 33)
+SubLabel.Position = UDim2.new(0, 65, 0, 31)
 SubLabel.BackgroundTransparency = 1
 SubLabel.Text = "@" .. LocalPlayer.Name .. " • Command Center"
 SubLabel.TextColor3 = Color3.fromRGB(100, 100, 120)
@@ -289,7 +289,7 @@ SubLabel.Parent = Topbar
 
 local CashLabel = Instance.new("TextLabel")
 CashLabel.Size = UDim2.new(0, 150, 0, 20)
-CashLabel.Position = UDim2.new(0, 65, 0, 46)
+CashLabel.Position = UDim2.new(0, 65, 0, 42)
 CashLabel.BackgroundTransparency = 1
 CashLabel.Text = "$0"
 CashLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
@@ -298,6 +298,47 @@ CashLabel.TextSize = 12
 CashLabel.TextXAlignment = Enum.TextXAlignment.Left
 CashLabel.ZIndex = 6
 CashLabel.Parent = Topbar
+
+local TopbarGloss = Instance.new("Frame")
+TopbarGloss.Size = UDim2.new(1, 0, 0, 32)
+TopbarGloss.BackgroundTransparency = 1
+TopbarGloss.ZIndex = 5
+TopbarGloss.Parent = Topbar
+
+local glossGrad = Instance.new("UIGradient")
+glossGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+    ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+})
+glossGrad.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.95),
+    NumberSequenceKeypoint.new(1, 1)
+})
+glossGrad.Rotation = 90
+glossGrad.Parent = TopbarGloss
+
+local TopMetrics = Instance.new("TextLabel")
+TopMetrics.Size = UDim2.new(0, 180, 0, 14)
+TopMetrics.Position = UDim2.new(1, -195, 0, 14)
+TopMetrics.BackgroundTransparency = 1
+TopMetrics.Text = "FPS: 60  •  PING: 0ms"
+TopMetrics.TextColor3 = Color3.fromRGB(120, 120, 130)
+TopMetrics.Font = Enum.Font.GothamMedium
+TopMetrics.TextSize = 10
+TopMetrics.TextXAlignment = Enum.TextXAlignment.Right
+TopMetrics.ZIndex = 6
+TopMetrics.Parent = Topbar
+
+local frameCount = 0
+game:GetService("RunService").Heartbeat:Connect(function() frameCount = frameCount + 1 end)
+task.spawn(function()
+    while task.wait(1) do
+        local fps = frameCount
+        frameCount = 0
+        local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+        TopMetrics.Text = string.format("FPS: %d  •  PING: %dms", fps, ping)
+    end
+end)
 
 task.spawn(function()
     while task.wait(2) do
@@ -362,11 +403,12 @@ local function createPage(name)
     page.BorderSizePixel = 0
     page.CanvasSize = UDim2.new(0, 0, 0, 0)
     page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    page.ScrollBarThickness = 2
+    page.ScrollBarThickness = 1
+    page.ScrollBarImageColor3 = Color3.fromRGB(40, 40, 50)
     page.Parent = pageContainer
     
     local list = Instance.new("UIListLayout")
-    list.Padding = UDim.new(0, 10)
+    list.Padding = UDim.new(0, 12)
     list.Parent = page
     
     return pageContainer, page
@@ -392,9 +434,10 @@ local function showPage(name)
     for n, container in pairs(TabContainers) do
         if n == name then
             container.Visible = true
-            TweenService:Create(container, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
+            container.Position = UDim2.new(0, 15, 0, 0)
+            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {GroupTransparency = 0, Position = UDim2.new(0, 0, 0, 0)}):Play()
         else
-            TweenService:Create(container, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 1}):Play()
+            TweenService:Create(container, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {GroupTransparency = 1, Position = UDim2.new(0, -15, 0, 0)}):Play()
             task.delay(0.35, function()
                 if container.GroupTransparency >= 0.99 then
                     container.Visible = false
