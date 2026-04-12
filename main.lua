@@ -155,26 +155,28 @@ MainStroke.Thickness = 1.5
 MainStroke.Parent = MainFrame
 
 local MainGlow = Instance.new("ImageLabel")
-MainGlow.Name = "BloomGlow"
-MainGlow.Size = UDim2.new(1, 40, 1, 40)
+MainGlow.Name = "EdgeGlow"
+MainGlow.Size = UDim2.new(1, 15, 1, 15)
 MainGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainGlow.AnchorPoint = Vector2.new(0.5, 0.5)
 MainGlow.BackgroundTransparency = 1
-MainGlow.Image = "rbxassetid://1316045217"
-MainGlow.ImageColor3 = Color3.fromRGB(255, 255, 255)
-MainGlow.ImageTransparency = 0.8
+MainGlow.Image = "rbxassetid://4743306782"
+MainGlow.ImageColor3 = Color3.fromRGB(220, 220, 255) -- Crystal White-Blue
+MainGlow.ImageTransparency = 0.6
+MainGlow.ScaleType = Enum.ScaleType.Slice
+MainGlow.SliceCenter = Rect.new(35, 35, 35, 35)
 MainGlow.ZIndex = 0
 MainGlow.Parent = MainFrame
 
-local glowTween = TweenService:Create(MainGlow, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-    ImageTransparency = 0.95,
-    Size = UDim2.new(1, 25, 1, 25)
+local glowTween = TweenService:Create(MainGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    ImageTransparency = 0.9,
+    Size = UDim2.new(1, 10, 1, 10)
 })
 glowTween:Play()
 
-MainStroke.Color = Color3.fromRGB(70, 70, 80)
-MainStroke.Thickness = 1
-MainStroke.Transparency = 0.6
+MainStroke.Color = Color3.fromRGB(150, 150, 180)
+MainStroke.Thickness = 1.2
+MainStroke.Transparency = 0.4
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
