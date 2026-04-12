@@ -523,8 +523,8 @@ local function createStat(label, value, color)
     l.BackgroundTransparency = 1
     l.Text = label
     l.TextColor3 = Color3.fromRGB(80, 80, 100)
-    l.Font = Enum.Font.GothamMedium
-    l.TextSize = 9
+    l.Font = Enum.Font.GothamBold
+    l.TextSize = 10
     l.Parent = f
     return v
 end
@@ -680,16 +680,24 @@ local function addBotCard(data)
     avCorner.CornerRadius = UDim.new(1, 0)
     avCorner.Parent = avatar
     
-    local name = Instance.new("TextLabel")
-    name.Position = UDim2.new(0, 56, 0, 8)
-    name.Size = UDim2.new(1, -120, 0, 18)
-    name.BackgroundTransparency = 1
-    name.Text = data.DisplayName .. "  (@" .. data.Name .. ")"
-    name.TextColor3 = Color3.new(1, 1, 1)
-    name.Font = Enum.Font.GothamBold
-    name.TextSize = 12
-    name.TextXAlignment = Enum.TextXAlignment.Left
-    name.Parent = card
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Position = UDim2.new(0, 56, 0, 8)
+    nameLabel.Size = UDim2.new(1, -120, 0, 18)
+    nameLabel.BackgroundTransparency = 1
+    
+    -- IDENTITY FIX: If DisplayName matches Owner, prioritize Username primarily
+    if data.DisplayName == LocalPlayer.DisplayName or data.DisplayName == "SAR4NDHC" then
+        nameLabel.Text = "@" .. data.Name .. "  <font size=\"10\" color=\"#808080\">[" .. data.DisplayName .. "]</font>"
+    else
+        nameLabel.Text = data.DisplayName .. "  (@" .. data.Name .. ")"
+    end
+
+    nameLabel.RichText = true
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 12
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.Parent = card
     
     local cash = Instance.new("TextLabel")
     cash.Position = UDim2.new(0, 56, 0, 27)
@@ -963,7 +971,7 @@ for _, loc in ipairs(TeleportLocations) do
     btn.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
     btn.Text = "  Setup Bots → " .. loc.Name
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.Font = Enum.Font.GothamMedium
+    btn.Font = Enum.Font.GothamBold
     btn.TextSize = 13
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.AutoButtonColor = false
@@ -1037,7 +1045,7 @@ local function createToggle(parent, text, default, callback)
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = Color3.new(1, 1, 1)
-    label.Font = Enum.Font.GothamMedium
+    label.Font = Enum.Font.GothamBold
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
@@ -1090,7 +1098,7 @@ local function createInput(parent, text, min, max, default, callback)
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = Color3.new(1, 1, 1)
-    label.Font = Enum.Font.GothamMedium
+    label.Font = Enum.Font.GothamBold
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
@@ -1103,7 +1111,7 @@ local function createInput(parent, text, min, max, default, callback)
     input.PlaceholderText = "Enter amount..."
     input.TextColor3 = Color3.new(1, 1, 1)
     input.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
-    input.Font = Enum.Font.GothamMedium
+    input.Font = Enum.Font.GothamBold
     input.TextSize = 13
     input.ClipsDescendants = true
     input.Parent = frame
@@ -1339,7 +1347,7 @@ local function updateSearch(query)
             btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
             btn.Text = "   + " .. p.DisplayName .. " (@" .. p.Name .. ")"
             btn.TextColor3 = Color3.new(1, 1, 1)
-            btn.Font = Enum.Font.GothamMedium
+            btn.Font = Enum.Font.GothamBold
             btn.TextSize = 11
             btn.TextXAlignment = Enum.TextXAlignment.Left
             btn.Parent = SearchResults
@@ -1376,11 +1384,11 @@ UtilsHeader.Parent = BuyerScroll
 createToggle(BuyerScroll, "Money ESP", false, function(v) getgenv().BotConfig.MoneyESP = v end)
 createToggle(BuyerScroll, "Auto Pickup Money", false, function(v) getgenv().BotConfig.AutoPickup = v end)
 
-local espHighlights = {}
+local playerESP = {}
 trackTask(game:GetService("RunService").Heartbeat:Connect(function()
     if getgenv().Kamaik_Unloaded then return end
     
-    -- ESP Logic
+    -- Ground Money ESP (Legacy)
     if getgenv().BotConfig.MoneyESP then
         local dropFolder = game.Workspace:FindFirstChild("Ignored") and game.Workspace.Ignored:FindFirstChild("Drop")
         if dropFolder then
@@ -1395,11 +1403,94 @@ trackTask(game:GetService("RunService").Heartbeat:Connect(function()
                 end
             end
         end
+    end
+
+    -- CINEMATIC PLAYER CASH ESP (V2)
+    if getgenv().BotConfig.MoneyESP then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                local esp = hrp:FindFirstChild("PlayerCashESP")
+                
+                if not esp then
+                    esp = Instance.new("BillboardGui")
+                    esp.Name = "PlayerCashESP"
+                    esp.Size = UDim2.new(0, 140, 0, 45)
+                    esp.AlwaysOnTop = true
+                    esp.Adornee = hrp
+                    esp.ExtentsOffset = Vector3.new(0, 3, 0)
+                    esp.Parent = hrp
+                    
+                    local frame = Instance.new("Frame")
+                    frame.Size = UDim2.new(1, 0, 1, 0)
+                    frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+                    frame.BackgroundTransparency = 0.1
+                    frame.Parent = esp
+                    
+                    local c = Instance.new("UICorner")
+                    c.CornerRadius = UDim.new(0, 8)
+                    c.Parent = frame
+                    
+                    local stroke = Instance.new("UIStroke")
+                    stroke.Color = Color3.fromRGB(200, 40, 40)
+                    stroke.Thickness = 1.5
+                    stroke.Parent = frame
+                    
+                    local av = Instance.new("ImageLabel")
+                    av.Size = UDim2.new(0, 24, 0, 24)
+                    av.Position = UDim2.new(0, 10, 0.5, 0)
+                    av.AnchorPoint = Vector2.new(0, 0.5)
+                    av.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                    av.Image = "rbxthumb://type=AvatarHeadShot&id=" .. tostring(p.UserId) .. "&w=150&h=150"
+                    av.Parent = frame
+                    Instance.new("UICorner", av).CornerRadius = UDim.new(1, 0)
+                    
+                    local wVal = Instance.new("TextLabel")
+                    wVal.Name = "Wallet"
+                    wVal.Size = UDim2.new(1, -45, 0.5, 0)
+                    wVal.Position = UDim2.new(0, 40, 0, 4)
+                    wVal.BackgroundTransparency = 1
+                    wVal.Text = "$0"
+                    wVal.TextColor3 = Color3.new(1, 1, 1)
+                    wVal.Font = Enum.Font.GothamBold
+                    wVal.TextSize = 12
+                    wVal.TextXAlignment = Enum.TextXAlignment.Left
+                    wVal.Parent = frame
+                    
+                    local bVal = Instance.new("TextLabel")
+                    bVal.Name = "Bank"
+                    bVal.Size = UDim2.new(1, -45, 0.5, 0)
+                    bVal.Position = UDim2.new(0, 40, 0.5, -4)
+                    bVal.BackgroundTransparency = 1
+                    bVal.Text = "$0"
+                    bVal.TextColor3 = Color3.fromRGB(255, 60, 60)
+                    bVal.Font = Enum.Font.GothamBold
+                    bVal.TextSize = 11
+                    bVal.TextXAlignment = Enum.TextXAlignment.Left
+                    bVal.Parent = frame
+                    
+                    playerESP[p.Name] = esp
+                end
+                
+                -- Update Values
+                local df = p:FindFirstChild("DataFolder")
+                if df then
+                    local wallet = df:FindFirstChild("Currency") and df.Currency.Value or 0
+                    local bank = df:FindFirstChild("Bank") and df.Bank.Value or 0
+                    esp.Frame.Wallet.Text = "$" .. tostring(wallet):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+                    esp.Frame.Bank.Text = "$" .. tostring(bank):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+                end
+            end
+        end
     else
-        -- Clean highlights if toggled off
+        -- Clean up BillboardGuis if toggled off
+        for name, esp in pairs(playerESP) do
+            if esp then esp:Destroy() end
+            playerESP[name] = nil
+        end
     end
     
-    -- Pickup Logic
+    -- Pickup Logic (Unchanged)
     if getgenv().BotConfig.AutoPickup and LocalPlayer.Character then
         local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         local dropFolder = game.Workspace:FindFirstChild("Ignored") and game.Workspace.Ignored:FindFirstChild("Drop")
@@ -1467,10 +1558,10 @@ local function createStatRow(title, val, color)
 end
 
 task.spawn(function()
-    while task.wait(1) do
+    while task.wait(1.5) do
         if getgenv().Kamaik_Unloaded then break end
         pcall(function()
-            if TabContainers.Stats.GroupTransparency < 0.9 then
+            if TabContainers.Stats.GroupTransparency < 1 then
                 StatsList:ClearAllChildren()
                 local l = Instance.new("UIListLayout")
                 l.Padding = UDim.new(0, 6)
@@ -1479,6 +1570,7 @@ task.spawn(function()
                 
                 local pad = Instance.new("UIPadding")
                 pad.PaddingTop = UDim.new(0, 5)
+                pad.PaddingBottom = UDim.new(0, 20)
                 pad.Parent = StatsList
 
                 local sessionTime = os.time() - SessionStart
@@ -1488,33 +1580,64 @@ task.spawn(function()
                 
                 local df = LocalPlayer:FindFirstChild("DataFolder")
                 local currentCash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0
-                local earned = currentCash - InitialCash
+                local earned = currentCash - (InitialCash or currentCash)
                 local cashHr = math.floor((earned / math.max(1, sessionTime)) * 3600)
 
                 createStatRow("SESSION UPTIME", string.format("%02d:%02d:%02d", hours, minutes, seconds), Color3.fromRGB(0, 150, 255))
-                createStatRow("CASH EARNED (YOU)", "$" .. tostring(earned):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(0, 255, 120))
-                createStatRow("CASH PER HOUR (YOU)", "$" .. tostring(cashHr):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(200, 255, 0))
+                createStatRow("PERSONAL EARNED", "$" .. tostring(earned):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(0, 255, 120))
                 
                 local header = Instance.new("TextLabel")
                 header.Size = UDim2.new(0.9, 0, 0, 35)
                 header.BackgroundTransparency = 1
-                header.Text = "BOT WORKFORCE ANALYTICS"
+                header.Text = "WORKFORCE DEEP ANALYTICS"
                 header.TextColor3 = Color3.fromRGB(120, 120, 140)
                 header.Font = Enum.Font.GothamBold
                 header.TextSize = 10
                 header.Parent = StatsList
 
                 local files = listfiles("")
+                local onlineCount = 0
+                local totalHp = 0
+                local topEarner = {Name = "N/A", Cash = 0}
+                local botStats = {}
+
                 for _, f in pairs(files) do
                     if f:match("status_.*%.json") then
-                        local data = HttpService:JSONDecode(readfile(f))
-                        if os.time() - data.LastUpdate < 20 then
-                            createStatRow(data.Name:upper(), "$" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.new(1,1,1))
+                        local success, data = pcall(function() return HttpService:JSONDecode(readfile(f)) end)
+                        if success and data and os.time() - data.LastUpdate < 20 then
+                            onlineCount = onlineCount + 1
+                            totalHp = totalHp + (data.Health or 100)
+                            if data.Cash > topEarner.Cash then
+                                topEarner = {Name = data.Name, Cash = data.Cash}
+                            end
+                            table.insert(botStats, data)
                         end
                     end
                 end
+                
+                if onlineCount > 0 then
+                    createStatRow("AVG WORKFORCE HEALTH", math.floor(totalHp / onlineCount) .. "%", Color3.fromRGB(255, 100, 100))
+                    createStatRow("TOP EARNER BOT", topEarner.Name:upper() .. " ($" .. tostring(topEarner.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "") .. ")", Color3.fromRGB(200, 255, 0))
+                    
+                    local divider = Instance.new("Frame")
+                    divider.Size = UDim2.new(0.9, 0, 0, 1)
+                    divider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+                    divider.BorderSizePixel = 0
+                    divider.Parent = StatsList
 
-                local resetBtn = createMiscBtn(StatsList, "RESET SESSION METRICS", function()
+                    for _, data in pairs(botStats) do
+                        createStatRow(data.Name:upper(), "$" .. tostring(data.Cash or 0):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.new(0.8, 0.8, 0.8))
+                    end
+                else
+                    createStatRow("WORKFORCE STATUS", "OFFLINE", Color3.fromRGB(150, 150, 150))
+                end
+
+                local spacer = Instance.new("Frame")
+                spacer.Size = UDim2.new(1, 0, 0, 10)
+                spacer.BackgroundTransparency = 1
+                spacer.Parent = StatsList
+
+                createMiscBtn(StatsList, "RESET SESSION METRICS", function()
                     InitialCash = LocalPlayer.DataFolder.Currency.Value
                     SessionStart = os.time()
                 end)
@@ -1529,7 +1652,7 @@ local function createMiscBtn(parent, text, callback)
     btn.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
     btn.Text = text
     btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamMedium
+    btn.Font = Enum.Font.GothamBold
     btn.TextSize = 13
     btn.AutoButtonColor = false
     btn.Parent = parent
@@ -1563,18 +1686,83 @@ createMiscBtn(Tabs.Misc, "Bring All Bots", function()
     end
 end)
 
+-- Teleport Tab Content
+local TeleHeader = Instance.new("TextLabel")
+TeleHeader.Size = UDim2.new(1, -20, 0, 25)
+TeleHeader.BackgroundTransparency = 1
+TeleHeader.Text = "BOT DEPLOYMENT SETUPS"
+TeleHeader.TextColor3 = Color3.fromRGB(120, 120, 140)
+TeleHeader.Font = Enum.Font.GothamBold
+TeleHeader.TextSize = 9
+TeleHeader.Parent = Tabs.Teleport
+
+local SetupGrid = Instance.new("Frame")
+SetupGrid.Size = UDim2.new(1, -20, 0, 140)
+SetupGrid.BackgroundTransparency = 1
+SetupGrid.Parent = Tabs.Teleport
+
+local grid = Instance.new("UIGridLayout")
+grid.CellSize = UDim2.new(0.48, 0, 0, 40)
+grid.CellPadding = UDim2.new(0, 8, 0, 8)
+grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
+grid.Parent = SetupGrid
+
+createMiscBtn(SetupGrid, "DEPLOY -> CLUB", function()
+    local cf = CFrame.new(-266.1, -2.2, -367.2)
+    getgenv().BotConfig.TargetCFrame = cf
+    syncConfig("TargetCFrame", cf)
+end)
+
+createMiscBtn(SetupGrid, "DEPLOY -> VAULT", function()
+    local cf = CFrame.new(-489, 21, -236)
+    getgenv().BotConfig.TargetCFrame = cf
+    syncConfig("TargetCFrame", cf)
+end)
+
+createMiscBtn(SetupGrid, "DEPLOY -> BANK", function()
+    local cf = CFrame.new(-434, 34, -282)
+    getgenv().BotConfig.TargetCFrame = cf
+    syncConfig("TargetCFrame", cf)
+end)
+
+local TPHeader = Instance.new("TextLabel")
+TPHeader.Size = UDim2.new(1, -20, 0, 25)
+TPHeader.BackgroundTransparency = 1
+TPHeader.Text = "LOCAL PLAYER TELEPORTS"
+TPHeader.TextColor3 = Color3.fromRGB(120, 120, 140)
+TPHeader.Font = Enum.Font.GothamBold
+TPHeader.TextSize = 9
+TPHeader.Parent = Tabs.Teleport
+
+local TPGrid = Instance.new("Frame")
+TPGrid.Size = UDim2.new(1, -20, 0, 100)
+TPGrid.BackgroundTransparency = 1
+TPGrid.Parent = Tabs.Teleport
+
+local grid2 = Instance.new("UIGridLayout")
+grid2.CellSize = UDim2.new(0.48, 0, 0, 40)
+grid2.CellPadding = UDim2.new(0, 8, 0, 8)
+grid2.HorizontalAlignment = Enum.HorizontalAlignment.Center
+grid2.Parent = TPGrid
+
+createMiscBtn(TPGrid, "TP -> BANK", function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-434, 34, -282) end)
+createMiscBtn(TPGrid, "TP -> CLUB", function() LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-266.1, -2.2, -367.2) end)
+
 createMiscBtn(Tabs.Misc, "Rejoin Server", function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
 end)
 
 createMiscBtn(Tabs.Misc, "Server Hop", function()
     local Http = game:GetService("HttpService")
     local TPS = game:GetService("TeleportService")
-    local Api = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
-    local _servers = Http:JSONDecode(game:HttpGet(Api))
+    local success, raw = pcall(function() return game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100") end)
+    if not success then return end
+    
+    local _servers = Http:JSONDecode(raw)
     for _, s in pairs(_servers.data) do
         if s.playing < s.maxPlayers and s.id ~= game.JobId then
             TPS:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer)
+            break
         end
     end
 end)
@@ -1603,7 +1791,7 @@ local function createKeybind(parent, text, defaultKey, callback)
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = Color3.new(1, 1, 1)
-    label.Font = Enum.Font.GothamMedium
+    label.Font = Enum.Font.GothamBold
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
@@ -1615,7 +1803,7 @@ local function createKeybind(parent, text, defaultKey, callback)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.Text = defaultKey.Name
     btn.TextColor3 = Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamMedium
+    btn.Font = Enum.Font.GothamBold
     btn.TextSize = 11
     btn.Parent = frame
     
