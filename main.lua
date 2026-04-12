@@ -11,17 +11,20 @@ getgenv().BotConfig = {
     FollowOwner = false,
     DropAmount = 15000,
     AntiWhiteScreen = true,
-    WalkSpeed = 16,
-    JumpPower = 50,
-    FlySpeed = 50,
-    FlyEnabled = false,
-    ESPEnabled = false,
     WhitelistedBuyers = {}
 }
 
 local function syncConfig()
     pcall(function()
-        writefile("bot_control.json", HttpService:JSONEncode(getgenv().BotConfig))
+        local config = {}
+        for k, v in pairs(getgenv().BotConfig) do
+            if typeof(v) == "CFrame" then
+                config[k] = {v:GetComponents()}
+            else
+                config[k] = v
+            end
+        end
+        writefile("bot_control.json", HttpService:JSONEncode(config))
     end)
 end
 
@@ -61,16 +64,51 @@ MainFrame.Active = true
 MainFrame.ZIndex = 2
 MainFrame.Parent = ScreenGui
 
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 14)
+MainCorner.Parent = MainFrame
+
+local GridOverlay = Instance.new("ImageLabel")
+GridOverlay.Name = "GridOverlay"
+GridOverlay.Size = UDim2.new(1, 0, 1, 0)
+GridOverlay.BackgroundTransparency = 1
+GridOverlay.Image = "rbxassetid://12456456071"
+GridOverlay.ImageTransparency = 0.95
+GridOverlay.ScaleType = Enum.ScaleType.Tile
+GridOverlay.TileSize = UDim2.new(0, 64, 0, 64)
+GridOverlay.ZIndex = 1
+GridOverlay.Parent = MainFrame
+
+local GridCorner = Instance.new("UICorner")
+GridCorner.CornerRadius = UDim.new(0, 14)
+GridCorner.Parent = GridOverlay
+
 local Glow = Instance.new("ImageLabel")
 Glow.Size = UDim2.new(1, 150, 1, 150)
 Glow.Position = UDim2.new(0.5, 0, 0.5, 0)
 Glow.AnchorPoint = Vector2.new(0.5, 0.5)
 Glow.BackgroundTransparency = 1
 Glow.Image = "rbxassetid://4975687002"
-Glow.ImageColor3 = Color3.fromRGB(0, 80, 255)
-Glow.ImageTransparency = 0.5
-Glow.ZIndex = 1
+Glow.ImageColor3 = Color3.fromRGB(0, 120, 255)
+Glow.ImageTransparency = 0.6
+Glow.ZIndex = 0
 Glow.Parent = MainFrame
+
+local glowGradient = Instance.new("UIGradient")
+glowGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 120, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 40, 80)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 120, 255))
+})
+glowGradient.Parent = Glow
+
+task.spawn(function()
+    local rot = 0
+    while task.wait(0.01) do
+        rot = rot + 0.5
+        glowGradient.Rotation = rot % 360
+    end
+end)
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 14)
@@ -96,38 +134,50 @@ Topbar.BackgroundTransparency = 1
 Topbar.ZIndex = 5
 Topbar.Parent = MainFrame
 
+local TopGradient = Instance.new("UIGradient")
+TopGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 15)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(25, 25, 25)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))
+})
+TopGradient.Parent = Topbar
+
 local ProfilePic = Instance.new("ImageLabel")
-ProfilePic.Size = UDim2.new(0, 40, 0, 40)
+ProfilePic.Size = UDim2.new(0, 42, 0, 42)
 ProfilePic.Position = UDim2.new(0, 5, 0.5, 0)
 ProfilePic.AnchorPoint = Vector2.new(0, 0.5)
 ProfilePic.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 ProfilePic.Image = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId .. "&w=150&h=150"
+ProfilePic.ZIndex = 6
 ProfilePic.Parent = Topbar
 
-local PicCorner = Instance.new("UICorner")
-PicCorner.CornerRadius = UDim.new(1, 0)
-PicCorner.Parent = ProfilePic
+local PicStroke = Instance.new("UIStroke")
+PicStroke.Color = Color3.fromRGB(0, 120, 255)
+PicStroke.Thickness = 2
+PicStroke.Parent = ProfilePic
 
 local WelcomeLabel = Instance.new("TextLabel")
 WelcomeLabel.Size = UDim2.new(0, 180, 0, 20)
-WelcomeLabel.Position = UDim2.new(0, 55, 0, 12)
+WelcomeLabel.Position = UDim2.new(0, 60, 0, 12)
 WelcomeLabel.BackgroundTransparency = 1
 WelcomeLabel.Text = "Welcome, " .. LocalPlayer.Name .. "!"
 WelcomeLabel.TextColor3 = Color3.new(1, 1, 1)
 WelcomeLabel.Font = Enum.Font.GothamBold
-WelcomeLabel.TextSize = 14
+WelcomeLabel.TextSize = 15
 WelcomeLabel.TextXAlignment = Enum.TextXAlignment.Left
+WelcomeLabel.ZIndex = 6
 WelcomeLabel.Parent = Topbar
 
 local CashLabel = Instance.new("TextLabel")
 CashLabel.Size = UDim2.new(0, 150, 0, 20)
-CashLabel.Position = UDim2.new(0, 55, 0, 28)
+CashLabel.Position = UDim2.new(0, 60, 0, 28)
 CashLabel.BackgroundTransparency = 1
 CashLabel.Text = "$$$ Loading..."
 CashLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
 CashLabel.Font = Enum.Font.GothamBold
-CashLabel.TextSize = 12
+CashLabel.TextSize = 13
 CashLabel.TextXAlignment = Enum.TextXAlignment.Left
+CashLabel.ZIndex = 6
 CashLabel.Parent = Topbar
 
 task.spawn(function()
@@ -357,7 +407,6 @@ end
 
 addTab("Alts")
 addTab("Buyers")
-addTab("Player")
 addTab("Stats")
 addTab("Misc")
 addTab("Settings")
@@ -366,12 +415,11 @@ local function showPage(name)
     for n, container in pairs(TabContainers) do
         if n == name then
             container.Visible = true
-            TweenService:Create(container, TweenInfo.new(0.4), {GroupTransparency = 0}):Play()
+            TweenService:Create(container, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
         else
-            task.spawn(function()
-                TweenService:Create(container, TweenInfo.new(0.4), {GroupTransparency = 1}):Play()
-                task.wait(0.4)
-                if container.GroupTransparency == 1 then
+            TweenService:Create(container, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 1}):Play()
+            task.delay(0.35, function()
+                if container.GroupTransparency >= 0.99 then
                     container.Visible = false
                 end
             end)
@@ -452,10 +500,33 @@ local function addBotCard(data)
     c.CornerRadius = UDim.new(0, 10)
     c.Parent = card
     
-    local s = Instance.new("UIStroke")
-    s.Color = data.Health < 50 and Color3.new(1, 0, 0) or Color3.fromRGB(0, 255, 0)
-    s.Thickness = 1
-    s.Parent = card
+    local mainStroke = Instance.new("UIStroke")
+    mainStroke.Color = data.Health < 50 and Color3.new(1, 0, 0) or Color3.fromRGB(0, 255, 120)
+    mainStroke.Thickness = 1.5
+    mainStroke.Parent = card
+    
+    local glowStroke = Instance.new("UIStroke")
+    glowStroke.Color = mainStroke.Color
+    glowStroke.Thickness = 3
+    glowStroke.Transparency = 0.6
+    glowStroke.Parent = card
+    
+    local gsGradient = Instance.new("UIGradient")
+    gsGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0.4),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    gsGradient.Parent = glowStroke
+    
+    task.spawn(function()
+        while card.Parent do
+            TweenService:Create(glowStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Thickness = 5, Transparency = 0.8}):Play()
+            task.wait(1.5)
+            TweenService:Create(glowStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Thickness = 3, Transparency = 0.6}):Play()
+            task.wait(1.5)
+        end
+    end)
     
     local name = Instance.new("TextLabel")
     name.Position = UDim2.new(0, 15, 0, 10)
@@ -531,19 +602,26 @@ end)
 local function createSidebarBtn(name, iconId)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 36)
-    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.BackgroundTransparency = 1
     btn.Text = ""
-    btn.AutoButtonColor = true
+    btn.AutoButtonColor = false
     btn.Parent = Sidebar
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 8)
     c.Parent = btn
     
+    local btnStroke = Instance.new("UIStroke")
+    btnStroke.Color = Color3.fromRGB(0, 120, 255)
+    btnStroke.Thickness = 1.5
+    btnStroke.Transparency = 1
+    btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    btnStroke.Parent = btn
+
     local icon = Instance.new("ImageLabel")
-    icon.Size = UDim2.new(0, 20, 0, 20)
-    icon.Position = UDim2.new(0, 10, 0.5, 0)
+    icon.Size = UDim2.new(0, 18, 0, 18)
+    icon.Position = UDim2.new(0, 12, 0.5, 0)
     icon.AnchorPoint = Vector2.new(0, 0.5)
     icon.BackgroundTransparency = 1
     icon.Image = "rbxassetid://" .. iconId
@@ -551,8 +629,8 @@ local function createSidebarBtn(name, iconId)
     icon.Parent = btn
     
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -40, 1, 0)
-    label.Position = UDim2.new(0, 35, 0, 0)
+    label.Size = UDim2.new(1, -45, 1, 0)
+    label.Position = UDim2.new(0, 40, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = name
     label.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -561,29 +639,48 @@ local function createSidebarBtn(name, iconId)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = btn
     
+    btn.MouseEnter:Connect(function()
+        if TabContainers[name].Visible == false then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.8}):Play()
+            TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.new(1, 1, 1)}):Play()
+            TweenService:Create(icon, TweenInfo.new(0.2), {ImageColor3 = Color3.new(1, 1, 1)}):Play()
+        end
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        if TabContainers[name].Visible == false then
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+            TweenService:Create(icon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+        end
+    end)
+
     btn.MouseButton1Click:Connect(function()
         showPage(name)
         for _, b in pairs(Sidebar:GetChildren()) do
             if b:IsA("TextButton") then
-                b.BackgroundTransparency = 1
-                b.TextLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-                b.ImageLabel.ImageColor3 = Color3.fromRGB(150, 150, 150)
+                TweenService:Create(b, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+                TweenService:Create(b.TextLabel, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+                TweenService:Create(b.ImageLabel, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+                if b:FindFirstChildOfClass("UIStroke") then
+                    TweenService:Create(b:FindFirstChildOfClass("UIStroke"), TweenInfo.new(0.2), {Transparency = 1}):Play()
+                end
             end
         end
-        btn.BackgroundTransparency = 0
-        label.TextColor3 = Color3.new(1, 1, 1)
-        icon.ImageColor3 = Color3.new(1, 1, 1)
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+        TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.new(1, 1, 1)}):Play()
+        TweenService:Create(icon, TweenInfo.new(0.2), {ImageColor3 = Color3.new(1, 1, 1)}):Play()
+        TweenService:Create(btnStroke, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
     end)
     
     return btn
 end
 
-createSidebarBtn("Alts", "10723350278")
-createSidebarBtn("Buyers", "10723346959")
-createSidebarBtn("Player", "10723343469")
-createSidebarBtn("Stats", "10723348633")
-createSidebarBtn("Misc", "10723345518")
-createSidebarBtn("Settings", "10723346123")
+createSidebarBtn("Alts", "10734950309")
+createSidebarBtn("Buyers", "10734897102")
+createSidebarBtn("Stats", "10723398439")
+createSidebarBtn("Misc", "10723351910")
+createSidebarBtn("Settings", "10723374431")
 
 showPage("Alts")
 
@@ -705,13 +802,6 @@ end
 createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig() end)
 createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig() end)
 createInput(Tabs.Alts, "Drop Amount", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
-
--- Player Tab Content
-createToggle(Tabs.Player, "Fly Enabled", false, function(v) getgenv().BotConfig.FlyEnabled = v; syncConfig() end)
-createInput(Tabs.Player, "Fly Speed", 5, 500, 50, function(v) getgenv().BotConfig.FlySpeed = v; syncConfig() end)
-createToggle(Tabs.Player, "ESP Enabled", false, function(v) getgenv().BotConfig.ESPEnabled = v; syncConfig() end)
-createInput(Tabs.Player, "WalkSpeed", 16, 200, 16, function(v) getgenv().BotConfig.WalkSpeed = v; syncConfig() end)
-createInput(Tabs.Player, "JumpPower", 50, 300, 50, function(v) getgenv().BotConfig.JumpPower = v; syncConfig() end)
 
 -- Buyers Tab Content
 local function updateBuyerList()
