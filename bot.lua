@@ -427,7 +427,7 @@ task.spawn(function()
     while task.wait(1) do
         if getgenv().BotConfig.RejoinSignal and getgenv().BotConfig.RejoinSignal > lastRejoin then
             lastRejoin = getgenv().BotConfig.RejoinSignal
-            game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+            game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
         end
         if getgenv().BotConfig.RefreshAvatarSignal and getgenv().BotConfig.RefreshAvatarSignal > lastRefresh then
             lastRefresh = getgenv().BotConfig.RefreshAvatarSignal
