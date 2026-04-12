@@ -65,6 +65,47 @@ task.spawn(function()
     end
 end)
 
+-- NETWORK SYNC: Listen for commands from Owner PC over chat channel
+task.spawn(function()
+    local function processChatCmd(msg, sender)
+        if sender.Name == getgenv().BotConfig.OwnerUsername or sender.Name == "crisperpamuk" then -- Whitelist Owner
+            if msg:match("^/e sync_bt|") then
+                local parts = msg:split("|")
+                local cmd = parts[2]
+                local val = parts[3]
+                
+                if cmd == "AutoDrop" then
+                    getgenv().BotConfig.AutoDrop = (val == "true")
+                elseif cmd == "FollowOwner" then
+                    getgenv().BotConfig.FollowOwner = (val == "true")
+                elseif cmd == "TargetCFrame" then
+                    local coords = val:split(",")
+                    if #coords == 3 then
+                        getgenv().BotConfig.TargetCFrame = CFrame.new(tonumber(coords[1]), tonumber(coords[2]), tonumber(coords[3]))
+                    end
+                elseif cmd == "ResetSignal" then
+                    getgenv().BotConfig.ResetSignal = (val == "true")
+                elseif cmd == "DropAmount" then
+                    getgenv().BotConfig.DropAmount = tonumber(val) or 15000
+                elseif cmd == "AntiWhiteScreen" then
+                    getgenv().BotConfig.AntiWhiteScreen = (val == "true")
+                end
+                
+                if notify then notify("Network Command: <font color=\"#00FFFF\">" .. cmd .. "</font>") end
+            end
+        end
+    end
+
+    local function hookPlayer(p)
+        p.Chatted:Connect(function(msg)
+            processChatCmd(msg, p)
+        end)
+    end
+
+    for _, p in pairs(Players:GetPlayers()) do hookPlayer(p) end
+    Players.PlayerAdded:Connect(hookPlayer)
+end)
+
 local AltConfig = {
     MinAge = 7,
     Whitelist = {LocalPlayer.UserId}
