@@ -35,8 +35,9 @@ task.spawn(function()
                 DisplayName = LocalPlayer.DisplayName,
                 UserId = LocalPlayer.UserId,
                 Cash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0,
+                BankCash = df and df:FindFirstChild("Bank") and df.Bank.Value or 0,
                 Health = math.floor(LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health or 0),
-                Status = getgenv().BotConfig and getgenv().BotConfig.AutoDrop and "Farming" or "Idle",
+                Status = getgenv().BotConfig and getgenv().BotConfig.AutoDrop and "Dropping" or "Idle",
                 LastUpdate = os.time()
             }
             writefile("status_" .. LocalPlayer.Name .. ".json", HttpService:JSONEncode(stats))
@@ -103,41 +104,19 @@ local DashboardUICorner = Instance.new("UICorner")
 DashboardUICorner.CornerRadius = UDim.new(0, 12)
 DashboardUICorner.Parent = Dashboard
 
-local DashboardStroke = Instance.new("UIStroke")
-DashboardStroke.Thickness = 1.5
-DashboardStroke.Color = Color3.new(1, 1, 1)
-DashboardStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-DashboardStroke.Transparency = 0.6
-DashboardStroke.Parent = Dashboard
-
-local DashboardGradient = Instance.new("UIGradient")
-DashboardGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 0)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 100, 0))
-})
-DashboardGradient.Rotation = 45
-DashboardGradient.Parent = DashboardStroke
-
-local Glow = Instance.new("ImageLabel")
-Glow.Name = "Glow"
-Glow.BackgroundTransparency = 1
-Glow.Position = UDim2.new(0.5, 0, 0.5, 0)
-Glow.AnchorPoint = Vector2.new(0.5, 0.5)
-Glow.Size = UDim2.new(1, 120, 1, 120)
-Glow.Image = "rbxassetid://4975687002"
-Glow.ImageColor3 = Color3.new(0, 1, 0)
-Glow.ImageTransparency = 0.4
-Glow.ZIndex = Dashboard.ZIndex - 1
-Glow.Parent = Dashboard
-
-task.spawn(function()
-    while true do
-        TweenService:Create(Glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.6}):Play()
-        task.wait(2)
-        TweenService:Create(Glow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.2}):Play()
-        task.wait(2)
-    end
-end)
+local DropShadow = Instance.new("ImageLabel")
+DropShadow.Name = "DropShadow"
+DropShadow.Size = UDim2.new(1, 40, 1, 40)
+DropShadow.Position = UDim2.new(0.5, 0, 0.5, 2)
+DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+DropShadow.BackgroundTransparency = 1
+DropShadow.Image = "rbxassetid://4743306782"
+DropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+DropShadow.ImageTransparency = 0.3
+DropShadow.ScaleType = Enum.ScaleType.Slice
+DropShadow.SliceCenter = Rect.new(35, 35, 35, 35)
+DropShadow.ZIndex = Dashboard.ZIndex - 1
+DropShadow.Parent = Dashboard
 
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -20, 0, 20)
