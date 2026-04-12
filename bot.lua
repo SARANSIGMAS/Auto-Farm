@@ -92,6 +92,12 @@ task.spawn(function()
                     getgenv().BotConfig.DropAmount = tonumber(val) or 15000
                 elseif cmd == "AntiWhiteScreen" then
                     getgenv().BotConfig.AntiWhiteScreen = (val == "true")
+                elseif cmd == "AutoPickup" then
+                    getgenv().BotConfig.AutoPickup = (val == "true")
+                elseif cmd == "PickupRange" then
+                    getgenv().BotConfig.PickupRange = tonumber(val) or 70
+                elseif cmd == "OwnerUpdate" then
+                    getgenv().BotConfig.OwnerUsername = val
                 end
                 
                 if notify then notify("Network Command: <font color=\"#00FFFF\">" .. cmd .. "</font>") end
@@ -468,23 +474,23 @@ setmetatable(getgenv().BotConfig, {
 RunService.Stepped:Connect(function()
     if getgenv().Kamaik_Unloaded then return end
     
+    -- Force character noclip (Aggressive override)
     local char = LocalPlayer.Character
     if char then
-        -- Character noclip for drops
         for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") and v.CanCollide then
+            if v:IsA("BasePart") then
                 v.CanCollide = false
             end
         end
     end
 
-    -- Force drops in Ignored to be non-collidable
+    -- Force platform and drops to be non-collidable
+    if currentPlatform then currentPlatform.CanCollide = false end
+    
     local ignored = workspace:FindFirstChild("Ignored")
     if ignored then
         for _, v in pairs(ignored:GetDescendants()) do
-            if v:IsA("BasePart") and v.Name == "MoneyDrop" and v.CanCollide then
-                v.CanCollide = false
-            elseif v:IsA("BasePart") and v.Parent and v.Parent.Name == "DroppedCash" and v.CanCollide then
+            if v:IsA("BasePart") then
                 v.CanCollide = false
             end
         end
@@ -552,3 +558,23 @@ task.spawn(function()
         end
     end
 end)
+
+-- AUTO PICKUP ENGINE
+RunService.Heartbeat:Connect(function()
+    if getgenv().Kamaik_Unloaded then return end
+    if getgenv().BotConfig.AutoPickup and LocalPlayer.Character then
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local dropFolder = game.Workspace:FindFirstChild("Ignored") and (game.Workspace.Ignored:FindFirstChild("Drop") or game.Workspace.Ignored:FindFirstChild("DroppedCash"))
+        if hrp and dropFolder then
+            for _, item in pairs(dropFolder:GetChildren()) do
+                if item.Name == "MoneyDrop" and item:FindFirstChild("ClickDetector") then
+                    local dist = (hrp.Position - item.Position).Magnitude
+                    if dist < 65 then
+                        fireclickdetector(item.ClickDetector)
+                    end
+                end
+            end
+        end
+    end
+end)
+
