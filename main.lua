@@ -515,6 +515,9 @@ alist.Padding = UDim.new(0, 12)
 alist.HorizontalAlignment = Enum.HorizontalAlignment.Center
 alist.Parent = AltsScroll
 
+local apad = Instance.new("UIPadding")
+apad.PaddingTop = UDim.new(0, 10)
+apad.PaddingBottom = UDim.new(0, 10)
 apad.Parent = AltsScroll
 
 local MasterControlFrame = Instance.new("Frame")
