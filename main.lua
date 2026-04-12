@@ -1507,25 +1507,24 @@ trackTask(game:GetService("RunService").Heartbeat:Connect(function()
     end
 end))
 
--- Stats Tab Content
-local StatsList = Instance.new("ScrollingFrame")
-StatsList.Size = UDim2.new(1, 0, 1, 0)
-StatsList.BackgroundTransparency = 1
-StatsList.BorderSizePixel = 0
-StatsList.AutomaticCanvasSize = Enum.AutomaticSize.Y
-StatsList.CanvasSize = UDim2.new(0, 0, 0, 0)
-StatsList.ScrollBarThickness = 2
-StatsList.Parent = Tabs.Stats
+-- Stats Tab Configuration
+local StatsTab = Tabs.Stats
+local slist = StatsTab:FindFirstChildOfClass("UIListLayout")
+if slist then
+    slist.Padding = UDim.new(0, 6)
+    slist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+end
 
-local slist = Instance.new("UIListLayout")
-slist.Padding = UDim.new(0, 5)
-slist.Parent = StatsList
+local spad = Instance.new("UIPadding")
+spad.PaddingTop = UDim.new(0, 10)
+spad.PaddingBottom = UDim.new(0, 20)
+spad.Parent = StatsTab
 
 local function createStatRow(title, val, color)
     local row = Instance.new("Frame")
     row.Size = UDim2.new(0.95, 0, 0, 35)
     row.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-    row.Parent = StatsList
+    row.Parent = StatsTab
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
@@ -1537,7 +1536,7 @@ local function createStatRow(title, val, color)
     tl.BackgroundTransparency = 1
     tl.Text = title
     tl.TextColor3 = Color3.fromRGB(150, 150, 160)
-    tl.Font = Enum.Font.GothamMedium
+    tl.Font = Enum.Font.GothamBold
     tl.TextSize = 11
     tl.TextXAlignment = Enum.TextXAlignment.Left
     tl.Parent = row
@@ -1561,17 +1560,18 @@ task.spawn(function()
     while task.wait(1.5) do
         if getgenv().Kamaik_Unloaded then break end
         pcall(function()
-            if TabContainers.Stats.GroupTransparency < 1 then
-                StatsList:ClearAllChildren()
+            if TabContainers.Stats.Visible then
+                StatsTab:ClearAllChildren()
+                
                 local l = Instance.new("UIListLayout")
                 l.Padding = UDim.new(0, 6)
                 l.HorizontalAlignment = Enum.HorizontalAlignment.Center
-                l.Parent = StatsList
+                l.Parent = StatsTab
                 
                 local pad = Instance.new("UIPadding")
-                pad.PaddingTop = UDim.new(0, 5)
+                pad.PaddingTop = UDim.new(0, 10)
                 pad.PaddingBottom = UDim.new(0, 20)
-                pad.Parent = StatsList
+                pad.Parent = StatsTab
 
                 local sessionTime = os.time() - SessionStart
                 local hours = math.floor(sessionTime / 3600)
@@ -1593,7 +1593,7 @@ task.spawn(function()
                 header.TextColor3 = Color3.fromRGB(120, 120, 140)
                 header.Font = Enum.Font.GothamBold
                 header.TextSize = 10
-                header.Parent = StatsList
+                header.Parent = StatsTab
 
                 local files = listfiles("")
                 local onlineCount = 0
@@ -1623,7 +1623,7 @@ task.spawn(function()
                     divider.Size = UDim2.new(0.9, 0, 0, 1)
                     divider.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
                     divider.BorderSizePixel = 0
-                    divider.Parent = StatsList
+                    divider.Parent = StatsTab
 
                     for _, data in pairs(botStats) do
                         createStatRow(data.Name:upper(), "$" .. tostring(data.Cash or 0):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.new(0.8, 0.8, 0.8))
@@ -1635,9 +1635,9 @@ task.spawn(function()
                 local spacer = Instance.new("Frame")
                 spacer.Size = UDim2.new(1, 0, 0, 10)
                 spacer.BackgroundTransparency = 1
-                spacer.Parent = StatsList
+                spacer.Parent = StatsTab
 
-                createMiscBtn(StatsList, "RESET SESSION METRICS", function()
+                createMiscBtn(StatsTab, "RESET SESSION METRICS", function()
                     InitialCash = LocalPlayer.DataFolder.Currency.Value
                     SessionStart = os.time()
                 end)
