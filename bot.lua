@@ -33,6 +33,7 @@ task.spawn(function()
             local stats = {
                 Name = LocalPlayer.Name,
                 DisplayName = LocalPlayer.DisplayName,
+                UserId = LocalPlayer.UserId,
                 Cash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0,
                 Health = math.floor(LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health or 0),
                 Status = getgenv().BotConfig and getgenv().BotConfig.AutoDrop and "Farming" or "Idle",
@@ -278,13 +279,17 @@ local function doTP(targetCFrame)
         local hrp = char.HumanoidRootPart
         local dist = (hrp.Position - targetCFrame.Position).Magnitude
         
-        local tweenInfo = TweenInfo.new(dist / 90, Enum.EasingStyle.Linear)
+        -- Smooth speed: min 1.5s, max 8s, scales with distance
+        local duration = math.clamp(dist / 120, 1.5, 8)
+        local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
         local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
         
         local noclip
         noclip = RunService.Stepped:Connect(function()
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+            if char and char.Parent then
+                for _, v in pairs(char:GetDescendants()) do
+                    if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+                end
             end
         end)
         
@@ -341,23 +346,57 @@ local function setupAtLocation(targetCFrame)
     if isTraveling then return end
     isTraveling = true
     
+    -- Recalculate formation before traveling
+    updateFormation()
+    
     notify("Traveling to setup...")
     
-    -- Create invisible platform at destination
+    -- Create invisible platform at destination (wider for multiple bots)
     if currentPlatform then currentPlatform:Destroy() end
     currentPlatform = Instance.new("Part")
-    currentPlatform.Size = Vector3.new(30, 1, 30)
+    currentPlatform.Name = "BotPlatform"
+    currentPlatform.Size = Vector3.new(50, 1, 50)
     currentPlatform.Anchored = true
     currentPlatform.Transparency = 1
     currentPlatform.CanCollide = true
-    currentPlatform.CFrame = targetCFrame * CFrame.new(0, 3, 0)
+    currentPlatform.CFrame = targetCFrame * CFrame.new(0, 4, 0)
     currentPlatform.Parent = workspace
     
-    -- Tween-travel to the location (smooth fly)
-    local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 7, formationOffset.Z)
-    doTP(hoverCF)
+    -- Phase 1: Rise up first (smooth ascent)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        local riseCF = hrp.CFrame + Vector3.new(0, 15, 0)
+        local riseTween = TweenService:Create(hrp, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {CFrame = riseCF})
+        
+        local noclipRise
+        noclipRise = RunService.Stepped:Connect(function()
+            if char and char.Parent then
+                for _, v in pairs(char:GetDescendants()) do
+                    if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
+                end
+            end
+        end)
+        
+        riseTween:Play()
+        riseTween.Completed:Wait()
+        if noclipRise then noclipRise:Disconnect() end
+    end
     
-    notify("Setup complete. Hovering.")
+    -- Phase 2: Fly to destination at altitude
+    local flyCF = targetCFrame * CFrame.new(formationOffset.X, 20, formationOffset.Z)
+    doTP(flyCF)
+    
+    -- Phase 3: Smooth descent to hover height
+    local char2 = LocalPlayer.Character
+    if char2 and char2:FindFirstChild("HumanoidRootPart") then
+        local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 7, formationOffset.Z)
+        local descentTween = TweenService:Create(char2.HumanoidRootPart, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {CFrame = hoverCF})
+        descentTween:Play()
+        descentTween.Completed:Wait()
+    end
+    
+    notify("Setup complete. Hovering in formation.")
     isTraveling = false
 end
 
@@ -391,7 +430,8 @@ RunService.Heartbeat:Connect(function(dt)
         end
         
         if targetCF then
-            local lerpFactor = math.clamp(0.15 * (dt * 60), 0, 1)
+            -- Smoother damping: 0.2 factor for snappier but still silky movement
+            local lerpFactor = math.clamp(0.2 * (dt * 60), 0, 1)
             hrp.CFrame = hrp.CFrame:Lerp(targetCF, lerpFactor)
         end
     end)
