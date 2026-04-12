@@ -32,7 +32,8 @@ local defaults = {
     Bank = false,
     AntiSit = true,
     AutoPickup = false,
-    PickupRange = 65
+    PickupRange = 65,
+    FloatHeight = 8
 }
 
 for k, v in pairs(defaults) do
@@ -130,6 +131,8 @@ task.spawn(function()
                         getgenv().BotConfig.TargetCFrame = CFrame.new(-396, 21, -298)
                     elseif cmd == "AntiSit" then
                         getgenv().BotConfig.AntiSit = (val == "true")
+                    elseif cmd == "FloatHeight" then
+                        getgenv().BotConfig.FloatHeight = tonumber(val) or 8
                     end
                     
                     if notify then notify("Network Command: <font color=\"#00FFFF\">" .. tostring(cmd) .. "</font>") end
@@ -406,7 +409,7 @@ local function updateFormation()
         local totalCols = math.min(#names, 5)
         local startX = -((totalCols - 1) * 2.5)
 
-        formationOffset = Vector3.new(startX + (col * 5), 8, 6 + (row * 5))
+        formationOffset = Vector3.new(startX + (col * 5), 0, 6 + (row * 5))
     end)
 end
 
@@ -482,7 +485,8 @@ local function setupAtLocation(targetCFrame)
         -- Descend to hover position
         local char2 = LocalPlayer.Character
         if char2 and char2:FindFirstChild("HumanoidRootPart") then
-            local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 8, formationOffset.Z)
+            local h = getgenv().BotConfig.FloatHeight or 8
+            local hoverCF = targetCFrame * CFrame.new(formationOffset.X, h, formationOffset.Z)
             local descentTween = TweenService:Create(char2.HumanoidRootPart, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {CFrame = hoverCF})
             descentTween:Play()
             descentTween.Completed:Wait()
@@ -523,10 +527,12 @@ trackBot(RunService.Heartbeat:Connect(function(dt)
         if getgenv().BotConfig.FollowOwner and getgenv().BotConfig.OwnerUsername and getgenv().BotConfig.OwnerUsername ~= "" then
             local owner = Players:FindFirstChild(getgenv().BotConfig.OwnerUsername)
             if owner and owner.Character and owner.Character:FindFirstChild("HumanoidRootPart") then
-                targetCF = owner.Character.HumanoidRootPart.CFrame * CFrame.new(formationOffset)
+                local h = getgenv().BotConfig.FloatHeight or 8
+                targetCF = owner.Character.HumanoidRootPart.CFrame * CFrame.new(formationOffset.X, h, formationOffset.Z)
             end
         elseif getgenv().BotConfig.TargetCFrame then
-            targetCF = getgenv().BotConfig.TargetCFrame * CFrame.new(formationOffset.X, 8, formationOffset.Z)
+            local h = getgenv().BotConfig.FloatHeight or 8
+            targetCF = getgenv().BotConfig.TargetCFrame * CFrame.new(formationOffset.X, h, formationOffset.Z)
         end
         
         if targetCF then
