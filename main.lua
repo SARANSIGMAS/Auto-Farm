@@ -5,6 +5,13 @@ local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
+local SessionStart = os.time()
+local InitialCash = 0
+pcall(function()
+    local df = LocalPlayer:FindFirstChild("DataFolder")
+    InitialCash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0
+end)
+
 getgenv().BotConfig = {
     OwnerUsername = LocalPlayer.Name,
     AutoDrop = false,
@@ -168,15 +175,25 @@ MainGlow.SliceCenter = Rect.new(35, 35, 35, 35)
 MainGlow.ZIndex = 0
 MainGlow.Parent = MainFrame
 
-local glowTween = TweenService:Create(MainGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-    ImageTransparency = 0.9,
-    Size = UDim2.new(1, 10, 1, 10)
+local glowTween = TweenService:Create(MainGlow, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    ImageTransparency = 0.95,
+    Size = UDim2.new(1, 4, 1, 4)
 })
 glowTween:Play()
 
+-- Pulse specific edges for "fade glow" effect
+task.spawn(function()
+    while true do
+        TweenService:Create(MainGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageColor3 = Color3.fromRGB(150, 150, 255)}):Play()
+        task.wait(2)
+        TweenService:Create(MainGlow, TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        task.wait(2)
+    end
+end)
+
 MainStroke.Color = Color3.fromRGB(150, 150, 180)
-MainStroke.Thickness = 1.2
-MainStroke.Transparency = 0.4
+MainStroke.Thickness = 1
+MainStroke.Transparency = 0.6
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
@@ -651,12 +668,37 @@ local function createSidebarBtn(name)
     return btn
 end
 
+local tabIcons = {
+    Alts = "👥",
+    Teleport = "📍",
+    Buyers = "💰",
+    Stats = "📊",
+    Misc = "⚙️",
+    Settings = "🛠️"
+}
+
 createSidebarBtn("Alts")
 createSidebarBtn("Teleport")
 createSidebarBtn("Buyers")
 createSidebarBtn("Stats")
 createSidebarBtn("Misc")
 createSidebarBtn("Settings")
+
+-- Update buttons to include icons
+for _, btn in pairs(Sidebar:GetChildren()) do
+    if btn:IsA("TextButton") and btn:FindFirstChild("TextLabel") then
+        local label = btn.TextLabel
+        local name = label.Text
+        if tabIcons[name] then
+            label.Text = tabIcons[name] .. "  " .. name
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            local pad = Instance.new("UIPadding")
+            pad.PaddingLeft = UDim.new(0, 15)
+            pad.Parent = label
+        end
+    end
+end
+
 
 showPage("Alts")
 
@@ -1137,83 +1179,92 @@ local slist = Instance.new("UIListLayout")
 slist.Padding = UDim.new(0, 5)
 slist.Parent = StatsList
 
+local function createStatRow(title, val, color)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(0.95, 0, 0, 35)
+    row.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    row.Parent = StatsList
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = row
+    
+    local tl = Instance.new("TextLabel")
+    tl.Size = UDim2.new(0.5, 0, 1, 0)
+    tl.Position = UDim2.new(0, 12, 0, 0)
+    tl.BackgroundTransparency = 1
+    tl.Text = title
+    tl.TextColor3 = Color3.fromRGB(150, 150, 160)
+    tl.Font = Enum.Font.GothamMedium
+    tl.TextSize = 11
+    tl.TextXAlignment = Enum.TextXAlignment.Left
+    tl.Parent = row
+    
+    local vl = Instance.new("TextLabel")
+    vl.Size = UDim2.new(0.5, 0, 1, 0)
+    vl.Position = UDim2.new(1, -12, 0, 0)
+    vl.AnchorPoint = Vector2.new(1, 0)
+    vl.BackgroundTransparency = 1
+    vl.Text = val
+    vl.TextColor3 = color or Color3.new(1, 1, 1)
+    vl.Font = Enum.Font.GothamBold
+    vl.TextSize = 12
+    vl.TextXAlignment = Enum.TextXAlignment.Right
+    vl.Parent = row
+    
+    return vl
+end
+
 task.spawn(function()
-    while task.wait(3) do
-        if isfolder and listfiles then
-            pcall(function()
+    while task.wait(1) do
+        pcall(function()
+            if TabContainers.Stats.Visible then
                 StatsList:ClearAllChildren()
-                CashContent:ClearAllChildren()
                 local l = Instance.new("UIListLayout")
-                l.Padding = UDim.new(0, 5)
+                l.Padding = UDim.new(0, 6)
+                l.HorizontalAlignment = Enum.HorizontalAlignment.Center
                 l.Parent = StatsList
                 
-                local cl = Instance.new("UIListLayout")
-                cl.Padding = UDim.new(0, 8)
-                cl.Parent = CashContent
+                local pad = Instance.new("UIPadding")
+                pad.PaddingTop = UDim.new(0, 5)
+                pad.Parent = StatsList
+
+                local sessionTime = os.time() - SessionStart
+                local hours = math.floor(sessionTime / 3600)
+                local minutes = math.floor((sessionTime % 3600) / 60)
+                local seconds = sessionTime % 60
                 
+                local df = LocalPlayer:FindFirstChild("DataFolder")
+                local currentCash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0
+                local earned = currentCash - InitialCash
+                local cashHr = math.floor((earned / math.max(1, sessionTime)) * 3600)
+
+                createStatRow("SESSION UPTIME", string.format("%02d:%02d:%02d", hours, minutes, seconds), Color3.fromRGB(0, 150, 255))
+                createStatRow("CASH EARNED", "$" .. tostring(earned):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(0, 255, 120))
+                createStatRow("CASH PER HOUR", "$" .. tostring(cashHr):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(200, 255, 0))
+                
+                local header = Instance.new("TextLabel")
+                header.Size = UDim2.new(0.9, 0, 0, 25)
+                header.BackgroundTransparency = 1
+                header.Text = "BOT WORKFORCE DETAILS"
+                header.TextColor3 = Color3.fromRGB(100, 100, 120)
+                header.Font = Enum.Font.GothamBold
+                header.TextSize = 9
+                header.Parent = StatsList
+
                 local files = listfiles("")
                 for _, f in pairs(files) do
                     if f:match("status_.*%.json") then
-                        local content = readfile(f)
-                        local data = HttpService:JSONDecode(content)
-                        if os.time() - data.LastUpdate < 15 then 
-                            local row = Instance.new("Frame")
-                            row.Size = UDim2.new(0.98, 0, 0, 30)
-                            row.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-                            row.Parent = StatsList
-                            
-                            local rc = Instance.new("UICorner")
-                            rc.CornerRadius = UDim.new(0, 4)
-                            rc.Parent = row
-                            
-                            local n = Instance.new("TextLabel")
-                            n.Size = UDim2.new(0.4, 0, 1, 0)
-                            n.Position = UDim2.new(0, 10, 0, 0)
-                            n.BackgroundTransparency = 1
-                            n.Text = data.Name
-                            n.TextColor3 = Color3.new(1, 1, 1)
-                            n.Font = Enum.Font.GothamMedium
-                            n.TextSize = 11
-                            n.TextXAlignment = Enum.TextXAlignment.Left
-                            n.Parent = row
-                            
-                            local c = Instance.new("TextLabel")
-                            c.Size = UDim2.new(0.3, 0, 1, 0)
-                            c.Position = UDim2.new(0.4, 0, 0, 0)
-                            c.BackgroundTransparency = 1
-                            c.Text = "$" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
-                            c.TextColor3 = Color3.fromRGB(0, 255, 100)
-                            c.Font = Enum.Font.GothamBold
-                            c.TextSize = 11
-                            c.Parent = row
-                            
-                            local s = Instance.new("TextLabel")
-                            s.Size = UDim2.new(0.3, 0, 1, 0)
-                            s.Position = UDim2.new(0.7, 0, 0, 0)
-                            s.BackgroundTransparency = 1
-                            s.Text = data.Status
-                            s.TextColor3 = data.Status == "Farming" and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(150, 150, 150)
-                            s.Font = Enum.Font.GothamMedium
-                            s.TextSize = 10
-                            s.Parent = row
-                            
-                            -- Add to Cash Popup too
-                            local crow = Instance.new("TextLabel")
-                            crow.Size = UDim2.new(1, 0, 0, 20)
-                            crow.BackgroundTransparency = 1
-                            crow.Text = data.Name .. ": $" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
-                            crow.TextColor3 = Color3.fromRGB(200, 200, 200)
-                            crow.Font = Enum.Font.Gotham
-                            crow.TextSize = 12
-                            crow.Parent = CashContent
+                        local data = HttpService:JSONDecode(readfile(f))
+                        if os.time() - data.LastUpdate < 20 then
+                            createStatRow(data.Name:upper(), "$" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.new(1,1,1))
                         end
                     end
                 end
-            end)
-        end
+            end
+        end)
     end
 end)
-
 
 local function createMiscBtn(parent, text, callback)
     local btn = Instance.new("TextButton")
@@ -1367,18 +1418,22 @@ game:GetService("RunService").RenderStepped:Connect(function()
 end)
 
 local MainScale = Instance.new("UIScale")
-MainScale.Scale = 1
-MainScale.Parent = MainFrame
+MainScale.Scale = 0.9
+MainFrame.BackgroundTransparency = 1
+MainFrame.Visible = false
 
-local isGuiVisible = true
+local isGuiVisible = false
 UserInputService.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == ToggleKey then
         isGuiVisible = not isGuiVisible
         if isGuiVisible then
             MainFrame.Visible = true
-            TweenService:Create(MainScale, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
+            MainFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
+            TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0), BackgroundTransparency = 0}):Play()
+            TweenService:Create(MainScale, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
         else
-            local t = TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Scale = 0})
+            TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.55, 0), BackgroundTransparency = 1}):Play()
+            local t = TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Scale = 0.9})
             t:Play()
             t.Completed:Connect(function()
                 if not isGuiVisible then MainFrame.Visible = false end
