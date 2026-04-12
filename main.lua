@@ -764,7 +764,7 @@ showPage("Alts")
 local TeleportLocations = {
     {Name = "Club", Position = CFrame.new(-266.1, -2.2, -367.2), Color = Color3.fromRGB(0, 150, 255)},
     {Name = "Vault", Position = CFrame.new(-38.3, -29.3, -283.4), Color = Color3.fromRGB(255, 180, 0)},
-    {Name = "Bank", Position = CFrame.new(-38.3, -29.3, -283.4), Color = Color3.fromRGB(0, 255, 120)}
+    {Name = "Bank", Position = CFrame.new(-402.12, 21.75, -283.98), Color = Color3.fromRGB(0, 255, 120)}
 }
 
 local tpHeader = Instance.new("TextLabel")
