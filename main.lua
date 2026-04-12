@@ -682,6 +682,177 @@ createSidebarBtn("Stats", "10723398439")
 createSidebarBtn("Misc", "10723351910")
 createSidebarBtn("Settings", "10723374431")
 
+-- Quick Hub (On-Screen Control)
+local QuickHub = Instance.new("Frame")
+QuickHub.Name = "QuickHub"
+QuickHub.Size = UDim2.new(0, 160, 0, 160)
+QuickHub.Position = UDim2.new(1, -180, 0.6, 0)
+QuickHub.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+QuickHub.BackgroundTransparency = 0.3
+QuickHub.BorderSizePixel = 0
+QuickHub.ZIndex = 50
+QuickHub.Parent = ScreenGui
+
+local QhCorner = Instance.new("UICorner")
+QhCorner.CornerRadius = UDim.new(0, 10)
+QhCorner.Parent = QuickHub
+
+local QhStroke = Instance.new("UIStroke")
+QhStroke.Color = Color3.fromRGB(0, 120, 255)
+QhStroke.Thickness = 1.5
+QhStroke.Transparency = 0.5
+QhStroke.Parent = QuickHub
+
+local QhGlow = Instance.new("ImageLabel")
+QhGlow.Size = UDim2.new(1, 40, 1, 40)
+QhGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
+QhGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+QhGlow.BackgroundTransparency = 1
+QhGlow.Image = "rbxassetid://4975687002"
+QhGlow.ImageColor3 = Color3.fromRGB(0, 120, 255)
+QhGlow.ImageTransparency = 0.7
+QhGlow.ZIndex = 49
+QhGlow.Parent = QuickHub
+
+local QhTitle = Instance.new("TextLabel")
+QhTitle.Size = UDim2.new(1, 0, 0, 25)
+QhTitle.BackgroundTransparency = 1
+QhTitle.Text = "QUICK HUB"
+QhTitle.TextColor3 = Color3.new(1, 1, 1)
+QhTitle.Font = Enum.Font.GothamBold
+QhTitle.TextSize = 10
+QhTitle.Parent = QuickHub
+
+local QhContent = Instance.new("Frame")
+QhContent.Size = UDim2.new(1, -10, 1, -50)
+QhContent.Position = UDim2.new(0, 5, 0, 45)
+QhContent.BackgroundTransparency = 1
+QhContent.Parent = QuickHub
+
+local QhStats = Instance.new("TextLabel")
+QhStats.Size = UDim2.new(1, 0, 0, 20)
+QhStats.Position = UDim2.new(0, 0, 0, 22)
+QhStats.BackgroundTransparency = 1
+QhStats.Text = "Bots: 0 | Cash: $0"
+QhStats.TextColor3 = Color3.fromRGB(200, 200, 200)
+QhStats.Font = Enum.Font.GothamMedium
+QhStats.TextSize = 9
+QhStats.Parent = QuickHub
+
+task.spawn(function()
+    while task.wait(3) do
+        local botCount = 0
+        local totalCash = 0
+        if isfolder and listfiles then
+            pcall(function()
+                local files = listfiles("")
+                for _, f in pairs(files) do
+                    if f:match("status_.*%.json") then
+                        local content = readfile(f)
+                        local data = HttpService:JSONDecode(content)
+                        if os.time() - data.LastUpdate < 15 then
+                            botCount = botCount + 1
+                            totalCash = totalCash + (data.Cash or 0)
+                        end
+                    end
+                end
+            end)
+        end
+        QhStats.Text = string.format("Bots: %d | Cash: $%s", botCount, tostring(totalCash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""))
+    end
+end)
+
+local QhList = Instance.new("UIListLayout")
+QhList.Padding = UDim.new(0, 5)
+QhList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+QhList.Parent = QhContent
+
+local function createQuickToggle(text, property, default)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 28)
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    btn.Text = " " .. text
+    btn.TextColor3 = default and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(150, 150, 150)
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextSize = 10
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Parent = QhContent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 4)
+    c.Parent = btn
+    
+    local s = Instance.new("UIStroke")
+    s.Color = Color3.fromRGB(0, 120, 255)
+    s.Thickness = 1
+    s.Transparency = default and 0.5 or 1
+    s.Parent = btn
+
+    local state = default
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        getgenv().BotConfig[property] = state
+        syncConfig()
+        TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = state and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(150, 150, 150)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = state and 0.5 or 1}):Play()
+    end)
+end
+
+local function createQuickBtn(text, color, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 28)
+    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    btn.Text = text
+    btn.TextColor3 = color or Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 10
+    btn.Parent = QhContent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 4)
+    c.Parent = btn
+    
+    btn.MouseButton1Click:Connect(callback)
+end
+
+createQuickToggle("FOLLOW OWNER", "FollowOwner", false)
+createQuickToggle("AUTO DROP", "AutoDrop", false)
+createQuickBtn("TP VAULT", Color3.fromRGB(0, 120, 255), function()
+    getgenv().BotConfig.TargetCFrame = CFrame.new(-38.3, -29.3, -283.4)
+    syncConfig()
+end)
+createQuickBtn("RESET ALL", Color3.fromRGB(255, 80, 80), function()
+    getgenv().BotConfig.ResetSignal = true
+    syncConfig()
+    task.wait(1)
+    getgenv().BotConfig.ResetSignal = false
+    syncConfig()
+end)
+
+-- Draggable implementation for Quick Hub
+local dragging, dragInput, dragStart, startPos
+QuickHub.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = QuickHub.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+QuickHub.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        QuickHub.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
 showPage("Alts")
 
 local function createToggle(parent, text, default, callback)
