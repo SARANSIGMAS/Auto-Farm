@@ -11,8 +11,18 @@ getgenv().BotConfig = {
     FollowOwner = false,
     DropAmount = 15000,
     AntiWhiteScreen = true,
-    WhitelistedBuyers = {}
+    WhitelistedBuyers = {},
+    AutoResetKO = true
 }
+
+local function parseShorthand(str)
+    str = string.upper(tostring(str:gsub(",", "")))
+    local numPart, suffix = string.match(str, "([%d%.]+)([KMB]?)")
+    local value = tonumber(numPart)
+    if not value then return 0 end
+    local multipliers = { ["K"] = 1000, ["M"] = 1000000, ["B"] = 1000000000, [""] = 1 }
+    return value * (multipliers[suffix] or 1)
+end
 
 local function syncConfig()
     pcall(function()
@@ -58,11 +68,23 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 620, 0, 440)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+MainFrame.BackgroundTransparency = 0.1
 MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
 MainFrame.ZIndex = 2
 MainFrame.Parent = ScreenGui
+
+local MainBlur = Instance.new("Frame")
+MainBlur.Name = "GlassLayer"
+MainBlur.Size = UDim2.new(1, 0, 1, 0)
+MainBlur.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainBlur.BackgroundTransparency = 0.8
+MainBlur.ZIndex = 1
+MainBlur.Parent = MainFrame
+
+local mbCorner = Instance.new("UICorner")
+mbCorner.CornerRadius = UDim.new(0, 14)
+mbCorner.Parent = MainBlur
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 14)
@@ -724,23 +746,23 @@ QhTitle.TextSize = 10
 QhTitle.Parent = QuickHub
 
 local QhContent = Instance.new("Frame")
-QhContent.Size = UDim2.new(1, -10, 1, -50)
-QhContent.Position = UDim2.new(0, 5, 0, 45)
+QhContent.Size = UDim2.new(1, -10, 1, -80)
+QhContent.Position = UDim2.new(0, 5, 0, 75)
 QhContent.BackgroundTransparency = 1
 QhContent.Parent = QuickHub
 
 local QhStats = Instance.new("TextLabel")
-QhStats.Size = UDim2.new(1, 0, 0, 20)
-QhStats.Position = UDim2.new(0, 0, 0, 22)
+QhStats.Size = UDim2.new(1, 0, 0, 30)
+QhStats.Position = UDim2.new(0, 0, 0, 20)
 QhStats.BackgroundTransparency = 1
-QhStats.Text = "Bots: 0 | Cash: $0"
+QhStats.Text = "Bots: 0 | Cash: $0\nDrop: $15,000"
 QhStats.TextColor3 = Color3.fromRGB(200, 200, 200)
 QhStats.Font = Enum.Font.GothamMedium
 QhStats.TextSize = 9
 QhStats.Parent = QuickHub
 
 task.spawn(function()
-    while task.wait(3) do
+    while task.wait(0.5) do
         local botCount = 0
         local totalCash = 0
         if isfolder and listfiles then
@@ -958,10 +980,10 @@ local function createInput(parent, text, min, max, default, callback)
     
     input.FocusLost:Connect(function()
         TweenService:Create(is, TweenInfo.new(0.2), {Color = Color3.fromRGB(40, 40, 40)}):Play()
-        local val = tonumber(input.Text)
-        if val then
+        local val = parseShorthand(input.Text)
+        if val > 0 then
             val = math.clamp(val, min, max)
-            input.Text = tostring(val)
+            input.Text = tostring(val):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
             callback(val)
         else
             input.Text = tostring(default)
@@ -972,7 +994,59 @@ end
 
 createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig() end)
 createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig() end)
-createInput(Tabs.Alts, "Drop Amount", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
+createToggle(Tabs.Alts, "Auto Reset if KO'd", true, function(v) getgenv().BotConfig.AutoResetKO = v; syncConfig() end)
+createInput(Tabs.Alts, "Drop Amount (e.g. 10k, 1m)", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
+
+local QuickSetup = Instance.new("Frame")
+QuickSetup.Size = UDim2.new(0.95, 0, 0, 80)
+QuickSetup.BackgroundTransparency = 1
+QuickSetup.Parent = Tabs.Alts
+
+local qsLabel = Instance.new("TextLabel")
+qsLabel.Size = UDim2.new(1, 0, 0, 20)
+qsLabel.BackgroundTransparency = 1
+qsLabel.Text = "AUTO SETUP PRESETS"
+qsLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+qsLabel.Font = Enum.Font.GothamBold
+qsLabel.TextSize = 10
+qsLabel.Parent = QuickSetup
+
+local qsGrid = Instance.new("UIGridLayout")
+qsGrid.CellSize = UDim2.new(0.23, 0, 0, 35)
+qsGrid.CellPadding = UDim2.new(0.02, 0, 0, 5)
+qsGrid.Parent = QuickSetup
+
+local SetupTPs = {
+    Club = CFrame.new(-266.1, -2.2, -367.2),
+    Bank = CFrame.new(-38.3, -29.3, -283.4),
+    Casino = CFrame.new(-853.3, 21.3, -135.2),
+    School = CFrame.new(-548.1, 21.2, 281.4)
+}
+
+for name, cf in pairs(SetupTPs) do
+    local btn = Instance.new("TextButton")
+    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    btn.Text = name:upper()
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 10
+    btn.Parent = QuickSetup
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = btn
+    
+    local s = Instance.new("UIStroke")
+    s.Color = Color3.fromRGB(0, 120, 255)
+    s.Thickness = 1
+    s.Transparency = 0.8
+    s.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        getgenv().BotConfig.TargetCFrame = cf
+        syncConfig()
+    end)
+end
 
 -- Buyers Tab Content
 local function updateBuyerList()
