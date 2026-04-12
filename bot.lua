@@ -176,19 +176,11 @@ MoneyLabel.Size = UDim2.new(1, -20, 0, 40)
 MoneyLabel.Position = UDim2.new(0, 10, 0, 30)
 MoneyLabel.BackgroundTransparency = 1
 MoneyLabel.Text = "$0"
-MoneyLabel.TextColor3 = Color3.new(1, 1, 1)
+MoneyLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
 MoneyLabel.Font = Enum.Font.GothamBold
 MoneyLabel.TextSize = 28
 MoneyLabel.TextXAlignment = Enum.TextXAlignment.Left
 MoneyLabel.Parent = Dashboard
-
-local MoneyGradient = Instance.new("UIGradient")
-MoneyGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 0)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 0))
-})
-MoneyGradient.Rotation = 90
-MoneyGradient.Parent = MoneyLabel
 
 local NotifyFrame = Instance.new("Frame")
 NotifyFrame.Size = UDim2.new(1, -20, 0, 50)
@@ -314,7 +306,7 @@ local function updateFormation()
     local startX = -((totalCols - 1) * 2.5)
     
     -- Forms neat rows of 5, pushing 5 studs back per row
-    formationOffset = Vector3.new(startX + (col * 5), 2, 6 + (row * 5))
+    formationOffset = Vector3.new(startX + (col * 5), 8, 6 + (row * 5))
 end
 
 Players.PlayerAdded:Connect(updateFormation)
@@ -373,7 +365,7 @@ local function setupAtLocation(targetCFrame)
     -- Phase 3: Smooth descent to hover height
     local char2 = LocalPlayer.Character
     if char2 and char2:FindFirstChild("HumanoidRootPart") then
-        local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 2, formationOffset.Z)
+        local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 8, formationOffset.Z)
         local descentTween = TweenService:Create(char2.HumanoidRootPart, TweenInfo.new(1.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {CFrame = hoverCF})
         descentTween:Play()
         descentTween.Completed:Wait()
@@ -409,7 +401,7 @@ RunService.Heartbeat:Connect(function(dt)
                 targetCF = owner.Character.HumanoidRootPart.CFrame * CFrame.new(formationOffset)
             end
         elseif getgenv().BotConfig.TargetCFrame then
-            targetCF = getgenv().BotConfig.TargetCFrame * CFrame.new(formationOffset.X, 2, formationOffset.Z)
+            targetCF = getgenv().BotConfig.TargetCFrame * CFrame.new(formationOffset.X, 8, formationOffset.Z)
         end
         
         if targetCF then
@@ -523,12 +515,6 @@ task.spawn(function()
             
             if isAlive and not isKO then
                 pcall(function() ME:FireServer("DropMoney", tostring(getgenv().BotConfig.DropAmount)) end)
-                
-                local hum = char:FindFirstChild("Humanoid")
-                if hum and char:FindFirstChild("HumanoidRootPart") then
-                    local rOffset = Vector3.new(math.random(-2, 2), 0, math.random(-2, 2))
-                    hum:MoveTo(char.HumanoidRootPart.Position + rOffset)
-                end
             end
             task.wait(15.5)
         else
