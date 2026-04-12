@@ -466,24 +466,26 @@ setmetatable(getgenv().BotConfig, {
 })
 
 RunService.Stepped:Connect(function()
-    local ignored = workspace:FindFirstChild("Ignored")
-    local dropped = ignored and ignored:FindFirstChild("DroppedCash")
-    if dropped then
-        for _, v in pairs(dropped:GetChildren()) do
+    if getgenv().Kamaik_Unloaded then return end
+    
+    local char = LocalPlayer.Character
+    if char then
+        -- Character noclip for drops
+        for _, v in pairs(char:GetDescendants()) do
             if v:IsA("BasePart") and v.CanCollide then
                 v.CanCollide = false
             end
         end
     end
-end)
 
-RunService.Heartbeat:Connect(function()
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            for _, v in pairs(p.Character:GetDescendants()) do
-                if v:IsA("BasePart") and v.CanCollide then
-                    v.CanCollide = false
-                end
+    -- Force drops in Ignored to be non-collidable
+    local ignored = workspace:FindFirstChild("Ignored")
+    if ignored then
+        for _, v in pairs(ignored:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name == "MoneyDrop" and v.CanCollide then
+                v.CanCollide = false
+            elseif v:IsA("BasePart") and v.Parent and v.Parent.Name == "DroppedCash" and v.CanCollide then
+                v.CanCollide = false
             end
         end
     end
