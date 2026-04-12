@@ -268,25 +268,133 @@ pcall(function()
     RunService:Set3dRenderingEnabled(not getgenv().BotConfig.AntiWhiteScreen)
 end)
 
-local formationOffset = (function()
-    local name = LocalPlayer.Name
-    local hash = 0
-    for i = 1, #name do hash = hash + string.byte(name, i) end
-    local angle = (hash % 360) / 360 * (math.pi * 2)
-    return Vector3.new(math.cos(angle) * 7, 5, math.sin(angle) * 7)
-end)()
+local TPs = {
+    Club = CFrame.new(-266.1, -2.2, -367.2)
+}
 
-RunService.Heartbeat:Connect(function()
-    if getgenv().BotConfig.FollowOwner and getgenv().BotConfig.OwnerUsername ~= "" then
-        pcall(function()
-            local owner = Players:FindFirstChild(getgenv().BotConfig.OwnerUsername)
-            local char = LocalPlayer.Character
-            if owner and owner.Character and owner.Character:FindFirstChild("HumanoidRootPart") and char and char:FindFirstChild("HumanoidRootPart") then
-                local targetCF = owner.Character.HumanoidRootPart.CFrame * CFrame.new(formationOffset)
-                char.HumanoidRootPart.CFrame = targetCF
+local function doTP(targetCFrame)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        local dist = (hrp.Position - targetCFrame.Position).Magnitude
+        
+        local tweenInfo = TweenInfo.new(dist / 90, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+        
+        local noclip
+        noclip = RunService.Stepped:Connect(function()
+            for _, v in pairs(char:GetDescendants()) do
+                if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
             end
         end)
+        
+        tween:Play()
+        tween.Completed:Wait()
+        if noclip then noclip:Disconnect() end
     end
+end
+
+local formationOffset = Vector3.new(0, 5, 0)
+
+local function updateFormation()
+    local names = {}
+    for _, p in pairs(Players:GetPlayers()) do
+        table.insert(names, p.Name)
+    end
+    table.sort(names)
+    
+    local myIndex = 1
+    for i, name in ipairs(names) do
+        if name == LocalPlayer.Name then
+            myIndex = i
+            break
+        end
+    end
+    
+    local targetIndex = myIndex
+    if getgenv().BotConfig.OwnerUsername ~= "" then
+        local ownInd = table.find(names, getgenv().BotConfig.OwnerUsername)
+        if ownInd and ownInd < myIndex then
+            targetIndex = targetIndex - 1
+        end
+    end
+
+    local row = math.floor((targetIndex - 1) / 5)
+    local col = (targetIndex - 1) % 5
+    
+    local totalCols = math.min(#names, 5)
+    local startX = -((totalCols - 1) * 2.5)
+    
+    -- Forms neat rows of 5, pushing 5 studs back per row
+    formationOffset = Vector3.new(startX + (col * 5), 5, 6 + (row * 5))
+end
+
+Players.PlayerAdded:Connect(updateFormation)
+Players.PlayerRemoving:Connect(updateFormation)
+updateFormation()
+
+local isTraveling = false
+local currentPlatform = nil
+local lastTargetCFrame = nil
+
+local function setupAtLocation(targetCFrame)
+    if isTraveling then return end
+    isTraveling = true
+    
+    notify("Traveling to setup...")
+    
+    -- Create invisible platform at destination
+    if currentPlatform then currentPlatform:Destroy() end
+    currentPlatform = Instance.new("Part")
+    currentPlatform.Size = Vector3.new(30, 1, 30)
+    currentPlatform.Anchored = true
+    currentPlatform.Transparency = 1
+    currentPlatform.CanCollide = true
+    currentPlatform.CFrame = targetCFrame * CFrame.new(0, 3, 0)
+    currentPlatform.Parent = workspace
+    
+    -- Tween-travel to the location (smooth fly)
+    local hoverCF = targetCFrame * CFrame.new(formationOffset.X, 7, formationOffset.Z)
+    doTP(hoverCF)
+    
+    notify("Setup complete. Hovering.")
+    isTraveling = false
+end
+
+-- Monitor for new TargetCFrame setup commands
+task.spawn(function()
+    while task.wait(1) do
+        local tc = getgenv().BotConfig.TargetCFrame
+        if tc and tc ~= lastTargetCFrame then
+            lastTargetCFrame = tc
+            setupAtLocation(tc)
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function(dt)
+    if isTraveling then return end
+    pcall(function()
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        local hrp = char.HumanoidRootPart
+        
+        local targetCF = nil
+        
+        if getgenv().BotConfig.FollowOwner and getgenv().BotConfig.OwnerUsername ~= "" then
+            local owner = Players:FindFirstChild(getgenv().BotConfig.OwnerUsername)
+            if owner and owner.Character and owner.Character:FindFirstChild("HumanoidRootPart") then
+                targetCF = owner.Character.HumanoidRootPart.CFrame * CFrame.new(formationOffset)
+            end
+        elseif getgenv().BotConfig.TargetCFrame then
+            targetCF = getgenv().BotConfig.TargetCFrame * CFrame.new(formationOffset.X, 7, formationOffset.Z)
+        end
+        
+        if targetCF then
+            local lerpFactor = math.clamp(0.15 * (dt * 60), 0, 1)
+            hrp.CFrame = hrp.CFrame:Lerp(targetCF, lerpFactor)
+        end
+    end)
 end)
 
 local lastRejoin = 0
@@ -344,31 +452,7 @@ LocalPlayer.Idled:Connect(function()
     VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame) 
 end)
 
-local TPs = {
-    Club = CFrame.new(-266.1, -2.2, -367.2)
-}
-
-local function doTP(targetCFrame)
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local hrp = char.HumanoidRootPart
-        local dist = (hrp.Position - targetCFrame.Position).Magnitude
-        
-        local tweenInfo = TweenInfo.new(dist / 90, Enum.EasingStyle.Linear)
-        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-        
-        local noclip
-        noclip = RunService.Stepped:Connect(function()
-            for _, v in pairs(char:GetDescendants()) do
-                if v:IsA("BasePart") and v.CanCollide then v.CanCollide = false end
-            end
-        end)
-        
-        tween:Play()
-        tween.Completed:Wait()
-        if noclip then noclip:Disconnect() end
-    end
-end
+local TPs_ALREADY_DEFINED = true -- TPs and doTP moved above
 
 if not game:IsLoaded() then game.Loaded:Wait() end
 local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
@@ -392,14 +476,10 @@ end)
 task.spawn(function()
     if hrp then
         task.wait(5)
-        local targetCF = TPs.Club * CFrame.new(0, 7, 0)
-        local plat = Instance.new("Part")
-        plat.Size = Vector3.new(25, 1, 25)
-        plat.Anchored = true
-        plat.Transparency = 1
-        plat.CFrame = targetCF * CFrame.new(0, -2, 0)
-        plat.Parent = workspace
-        doTP(targetCF)
+        -- Use the setup system for initial Club teleport
+        getgenv().BotConfig.TargetCFrame = TPs.Club
+        lastTargetCFrame = TPs.Club
+        setupAtLocation(TPs.Club)
     end
     
     while true do
@@ -419,22 +499,12 @@ task.spawn(function()
             local isKO = be and be:FindFirstChild("K.O") and be["K.O"].Value == true
             
             if isAlive and not isKO then
-                local dropPos = TPs.Club * CFrame.new(math.random(-6, 6), 7, math.random(-6, 6))
-                
-                if getgenv().BotConfig.TargetCFrame then
-                    dropPos = getgenv().BotConfig.TargetCFrame * CFrame.new(math.random(-6, 6), 7, math.random(-6, 6))
-                end
-
-                if char:FindFirstChild("HumanoidRootPart") then
-                    char.HumanoidRootPart.CFrame = dropPos
-                end
-                
                 pcall(function() ME:FireServer("DropMoney", tostring(getgenv().BotConfig.DropAmount)) end)
                 
                 local hum = char:FindFirstChild("Humanoid")
                 if hum and char:FindFirstChild("HumanoidRootPart") then
-                    local rOffset = Vector3.new(math.random(-3, 3), 0, math.random(-3, 3))
-                    hum:MoveTo(dropPos.Position + rOffset)
+                    local rOffset = Vector3.new(math.random(-2, 2), 0, math.random(-2, 2))
+                    hum:MoveTo(char.HumanoidRootPart.Position + rOffset)
                 end
             end
             task.wait(15.5)
