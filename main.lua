@@ -166,23 +166,27 @@ MainStroke.Parent = MainFrame
 
 local MainGlow = Instance.new("ImageLabel")
 MainGlow.Name = "EdgeGlow"
-MainGlow.Size = UDim2.new(1, 15, 1, 15)
+MainGlow.Size = UDim2.new(1, 10, 1, 10)
 MainGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainGlow.AnchorPoint = Vector2.new(0.5, 0.5)
 MainGlow.BackgroundTransparency = 1
 MainGlow.Image = "rbxassetid://4743306782"
-MainGlow.ImageColor3 = Color3.fromRGB(220, 220, 255) -- Crystal White-Blue
-MainGlow.ImageTransparency = 0.6
+MainGlow.ImageColor3 = Color3.fromRGB(220, 220, 255)
+MainGlow.ImageTransparency = 0.8
 MainGlow.ScaleType = Enum.ScaleType.Slice
 MainGlow.SliceCenter = Rect.new(35, 35, 35, 35)
 MainGlow.ZIndex = 0
 MainGlow.Parent = MainFrame
 
-local glowTween = TweenService:Create(MainGlow, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-    ImageTransparency = 0.95,
-    Size = UDim2.new(1, 4, 1, 4)
+local glowTween = TweenService:Create(MainGlow, TweenInfo.new(4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    ImageTransparency = 0.96,
+    Size = UDim2.new(1, 2, 1, 2)
 })
 glowTween:Play()
+
+MainStroke.Color = Color3.fromRGB(150, 150, 180)
+MainStroke.Thickness = 1
+MainStroke.Transparency = 0.7
 
 -- Pulse specific edges for "fade glow" effect
 task.spawn(function()
@@ -450,6 +454,48 @@ local function createStat(label, value, color)
     return v
 end
 
+local function createMasterToggle(parent, text, configKey)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 130, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+    btn.Text = "  " .. text
+    btn.TextColor3 = Color3.fromRGB(140, 140, 160)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 10
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.AutoButtonColor = false
+    btn.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = btn
+    
+    local indicator = Instance.new("Frame")
+    indicator.Size = UDim2.new(0, 8, 0, 8)
+    indicator.Position = UDim2.new(1, -15, 0.5, 0)
+    indicator.AnchorPoint = Vector2.new(0.5, 0.5)
+    indicator.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    indicator.Parent = btn
+    
+    local ic = Instance.new("UICorner")
+    ic.CornerRadius = UDim.new(1, 0)
+    ic.Parent = indicator
+
+    local function update()
+        local enabled = getgenv().BotConfig[configKey]
+        TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = enabled and Color3.new(1,1,1) or Color3.fromRGB(140, 140, 160)}):Play()
+        TweenService:Create(indicator, TweenInfo.new(0.2), {BackgroundColor3 = enabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(40, 40, 50)}):Play()
+    end
+
+    btn.MouseButton1Click:Connect(function()
+        getgenv().BotConfig[configKey] = not getgenv().BotConfig[configKey]
+        syncConfig(configKey, getgenv().BotConfig[configKey])
+        update()
+    end)
+    
+    update()
+end
+
 local onlineStat = createStat("ONLINE BOTS", "0")
 local droppingStat = createStat("DROPPING", "0", Color3.fromRGB(0, 255, 100))
 local totalCashStat = createStat("TOTAL CASH", "$0")
@@ -469,10 +515,22 @@ alist.Padding = UDim.new(0, 12)
 alist.HorizontalAlignment = Enum.HorizontalAlignment.Center
 alist.Parent = AltsScroll
 
-local apad = Instance.new("UIPadding")
-apad.PaddingTop = UDim.new(0, 10)
-apad.PaddingBottom = UDim.new(0, 10)
 apad.Parent = AltsScroll
+
+local MasterControlFrame = Instance.new("Frame")
+MasterControlFrame.Size = UDim2.new(0.97, 0, 0, 45)
+MasterControlFrame.BackgroundTransparency = 1
+MasterControlFrame.Parent = AltsScroll
+
+local mcLayout = Instance.new("UIListLayout")
+mcLayout.FillDirection = Enum.FillDirection.Horizontal
+mcLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+mcLayout.Padding = UDim.new(0, 15)
+mcLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+mcLayout.Parent = MasterControlFrame
+
+createMasterToggle(MasterControlFrame, "AUTO DROP", "AutoDrop")
+createMasterToggle(MasterControlFrame, "FOLLOW OWNER", "FollowOwner")
 
 local BotScroll = AltsScroll -- Redirecting older BotScroll variable to the main scroll for compatibility
 
@@ -671,15 +729,6 @@ local function createSidebarBtn(name)
     return btn
 end
 
-local tabIcons = {
-    Alts = "👥",
-    Teleport = "📍",
-    Buyers = "💰",
-    Stats = "📊",
-    Misc = "⚙️",
-    Settings = "🛠️"
-}
-
 createSidebarBtn("Alts")
 createSidebarBtn("Teleport")
 createSidebarBtn("Buyers")
@@ -687,18 +736,11 @@ createSidebarBtn("Stats")
 createSidebarBtn("Misc")
 createSidebarBtn("Settings")
 
--- Update buttons to include icons
+-- Update buttons (Clean Typography only)
 for _, btn in pairs(Sidebar:GetChildren()) do
     if btn:IsA("TextButton") and btn:FindFirstChild("TextLabel") then
         local label = btn.TextLabel
-        local name = label.Text
-        if tabIcons[name] then
-            label.Text = tabIcons[name] .. "  " .. name
-            label.TextXAlignment = Enum.TextXAlignment.Left
-            local pad = Instance.new("UIPadding")
-            pad.PaddingLeft = UDim.new(0, 15)
-            pad.Parent = label
-        end
+        label.TextXAlignment = Enum.TextXAlignment.Center
     end
 end
 
@@ -1421,9 +1463,9 @@ game:GetService("RunService").RenderStepped:Connect(function()
 end)
 
 local MainScale = Instance.new("UIScale")
-MainScale.Scale = 0.9
-MainFrame.BackgroundTransparency = 1
-MainFrame.Visible = true -- Start visible
+MainScale.Scale = 1
+MainFrame.BackgroundTransparency = 0
+MainFrame.Visible = true
 
 local isGuiVisible = true
 local function toggleGui(visible)
@@ -1443,7 +1485,10 @@ local function toggleGui(visible)
     end
 end
 
--- Play startup animation
+-- Play startup slide-in animation
+MainFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
+MainFrame.BackgroundTransparency = 1
+MainScale.Scale = 0.9
 toggleGui(true)
 
 UserInputService.InputBegan:Connect(function(input, gpe)
