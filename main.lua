@@ -153,16 +153,13 @@ MainGlow.SliceCenter = Rect.new(35, 35, 35, 35)
 MainGlow.ZIndex = 0
 MainGlow.Parent = MainFrame
 
-task.spawn(function()
-    local hue = 0
-    while task.wait() do
-        hue = hue + 0.0015
-        if hue >= 1 then hue = 0 end
-        local c = Color3.fromHSV(hue, 0.7, 1)
-        MainGlow.ImageColor3 = c
-        MainStroke.Color = c
-    end
-end)
+MainGlow.ImageColor3 = Color3.fromRGB(0, 150, 255)
+MainStroke.Color = Color3.fromRGB(0, 150, 255)
+MainStroke.Transparency = 0.2
+
+local glowTweenInfo = TweenInfo.new(2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+TweenService:Create(MainGlow, glowTweenInfo, {ImageTransparency = 0.7}):Play()
+TweenService:Create(MainStroke, glowTweenInfo, {Transparency = 0.8}):Play()
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
