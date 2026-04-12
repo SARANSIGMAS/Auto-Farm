@@ -1406,7 +1406,10 @@ trackTask(game:GetService("RunService").Heartbeat:Connect(function()
         end
     end
 
-    -- CINEMATIC PLAYER CASH ESP (V2)
+    -- Intelligence Cache for Session Collection Tracking
+    if not getgenv().InitialCashCache then getgenv().InitialCashCache = {} end
+
+    -- CINEMATIC PLAYER CASH ESP (V3 - Collection Tracker)
     if getgenv().BotConfig.MoneyESP then
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -1416,7 +1419,7 @@ trackTask(game:GetService("RunService").Heartbeat:Connect(function()
                 if not esp then
                     esp = Instance.new("BillboardGui")
                     esp.Name = "PlayerCashESP"
-                    esp.Size = UDim2.new(0, 140, 0, 45)
+                    esp.Size = UDim2.new(0, 145, 0, 55)
                     esp.AlwaysOnTop = true
                     esp.Adornee = hrp
                     esp.ExtentsOffset = Vector3.new(0, 3, 0)
@@ -1448,27 +1451,39 @@ trackTask(game:GetService("RunService").Heartbeat:Connect(function()
                     
                     local wVal = Instance.new("TextLabel")
                     wVal.Name = "Wallet"
-                    wVal.Size = UDim2.new(1, -45, 0.5, 0)
-                    wVal.Position = UDim2.new(0, 40, 0, 4)
+                    wVal.Size = UDim2.new(1, -45, 0.33, 0)
+                    wVal.Position = UDim2.new(0, 42, 0, 4)
                     wVal.BackgroundTransparency = 1
                     wVal.Text = "$0"
                     wVal.TextColor3 = Color3.new(1, 1, 1)
                     wVal.Font = Enum.Font.GothamBold
-                    wVal.TextSize = 12
+                    wVal.TextSize = 11
                     wVal.TextXAlignment = Enum.TextXAlignment.Left
                     wVal.Parent = frame
                     
                     local bVal = Instance.new("TextLabel")
                     bVal.Name = "Bank"
-                    bVal.Size = UDim2.new(1, -45, 0.5, 0)
-                    bVal.Position = UDim2.new(0, 40, 0.5, -4)
+                    bVal.Size = UDim2.new(1, -45, 0.33, 0)
+                    bVal.Position = UDim2.new(0, 42, 0.33, 2)
                     bVal.BackgroundTransparency = 1
                     bVal.Text = "$0"
                     bVal.TextColor3 = Color3.fromRGB(255, 60, 60)
                     bVal.Font = Enum.Font.GothamBold
-                    bVal.TextSize = 11
+                    bVal.TextSize = 10
                     bVal.TextXAlignment = Enum.TextXAlignment.Left
                     bVal.Parent = frame
+
+                    local gVal = Instance.new("TextLabel")
+                    gVal.Name = "Gained"
+                    gVal.Size = UDim2.new(1, -45, 0.33, 0)
+                    gVal.Position = UDim2.new(0, 42, 0.66, 0)
+                    gVal.BackgroundTransparency = 1
+                    gVal.Text = "+$0 Collected"
+                    gVal.TextColor3 = Color3.fromRGB(0, 255, 120)
+                    gVal.Font = Enum.Font.GothamBold
+                    gVal.TextSize = 10
+                    gVal.TextXAlignment = Enum.TextXAlignment.Left
+                    gVal.Parent = frame
                     
                     playerESP[p.Name] = esp
                 end
@@ -1478,8 +1493,17 @@ trackTask(game:GetService("RunService").Heartbeat:Connect(function()
                 if df then
                     local wallet = df:FindFirstChild("Currency") and df.Currency.Value or 0
                     local bank = df:FindFirstChild("Bank") and df.Bank.Value or 0
+                    
+                    -- Cache initial session wallet
+                    if not getgenv().InitialCashCache[p.UserId] then
+                        getgenv().InitialCashCache[p.UserId] = wallet
+                    end
+                    
+                    local gained = wallet - getgenv().InitialCashCache[p.UserId]
+                    
                     esp.Frame.Wallet.Text = "$" .. tostring(wallet):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
                     esp.Frame.Bank.Text = "$" .. tostring(bank):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+                    esp.Frame.Gained.Text = "+$" .. tostring(math.max(0, gained)):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "") .. " Gained"
                 end
             end
         end
