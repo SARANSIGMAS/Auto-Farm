@@ -68,6 +68,7 @@ local function syncConfig(cmdType, cmdVal)
     end)
 end
 
+syncConfig("OwnerUpdate", LocalPlayer.Name)
 syncConfig()
 
 task.spawn(function()
@@ -1382,7 +1383,7 @@ UtilsHeader.TextSize = 9
 UtilsHeader.Parent = BuyerScroll
 
 createToggle(BuyerScroll, "Money ESP", false, function(v) getgenv().BotConfig.MoneyESP = v end)
-createToggle(BuyerScroll, "Auto Pickup Money", false, function(v) getgenv().BotConfig.AutoPickup = v end)
+createToggle(BuyerScroll, "Auto Pickup Money", false, function(v) getgenv().BotConfig.AutoPickup = v; syncConfig("AutoPickup", v) end)
 
 local playerESP = {}
 trackTask(game:GetService("RunService").Heartbeat:Connect(function()
@@ -1490,21 +1491,7 @@ trackTask(game:GetService("RunService").Heartbeat:Connect(function()
         end
     end
     
-    -- Pickup Logic (Unchanged)
-    if getgenv().BotConfig.AutoPickup and LocalPlayer.Character then
-        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local dropFolder = game.Workspace:FindFirstChild("Ignored") and game.Workspace.Ignored:FindFirstChild("Drop")
-        if hrp and dropFolder then
-            for _, item in pairs(dropFolder:GetChildren()) do
-                if item.Name == "MoneyDrop" and item:FindFirstChild("ClickDetector") then
-                    local dist = (hrp.Position - item.Position).Magnitude
-                    if dist < (getgenv().BotConfig.PickupRange or 50) then
-                        fireclickdetector(item.ClickDetector)
-                    end
-                end
-            end
-        end
-    end
+
 end))
 
 -- Stats Tab Configuration
