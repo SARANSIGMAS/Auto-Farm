@@ -156,24 +156,25 @@ MainStroke.Parent = MainFrame
 
 local MainGlow = Instance.new("ImageLabel")
 MainGlow.Name = "BloomGlow"
-MainGlow.Size = UDim2.new(1, 150, 1, 150)
+MainGlow.Size = UDim2.new(1, 40, 1, 40)
 MainGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainGlow.AnchorPoint = Vector2.new(0.5, 0.5)
 MainGlow.BackgroundTransparency = 1
 MainGlow.Image = "rbxassetid://1316045217"
 MainGlow.ImageColor3 = Color3.fromRGB(255, 255, 255)
-MainGlow.ImageTransparency = 0.6
+MainGlow.ImageTransparency = 0.8
 MainGlow.ZIndex = 0
 MainGlow.Parent = MainFrame
 
-local glowTween = TweenService:Create(MainGlow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
-    ImageTransparency = 0.85,
-    Size = UDim2.new(1, 120, 1, 120)
+local glowTween = TweenService:Create(MainGlow, TweenInfo.new(3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+    ImageTransparency = 0.95,
+    Size = UDim2.new(1, 25, 1, 25)
 })
 glowTween:Play()
 
-MainStroke.Color = Color3.fromRGB(60, 60, 70)
-MainStroke.Transparency = 0.5
+MainStroke.Color = Color3.fromRGB(70, 70, 80)
+MainStroke.Thickness = 1
+MainStroke.Transparency = 0.6
 
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 65)
@@ -430,19 +431,27 @@ local onlineStat = createStat("ONLINE BOTS", "0")
 local droppingStat = createStat("DROPPING", "0", Color3.fromRGB(0, 255, 100))
 local totalCashStat = createStat("TOTAL CASH", "$0")
 
-local BotScroll = Instance.new("ScrollingFrame")
-BotScroll.Size = UDim2.new(1, 0, 1, -55)
-BotScroll.Position = UDim2.new(0, 0, 0, 55)
-BotScroll.BackgroundTransparency = 1
-BotScroll.BorderSizePixel = 0
-BotScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-BotScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-BotScroll.ScrollBarThickness = 2
-BotScroll.Parent = Tabs.Alts
+-- FIXED LAYOUT: Consolidated Alts Tab into one Scroll to prevent overlap
+local AltsScroll = Instance.new("ScrollingFrame")
+AltsScroll.Size = UDim2.new(1, 0, 1, 0)
+AltsScroll.BackgroundTransparency = 1
+AltsScroll.BorderSizePixel = 0
+AltsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+AltsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+AltsScroll.ScrollBarThickness = 2
+AltsScroll.Parent = Tabs.Alts
 
-local blist = Instance.new("UIListLayout")
-blist.Padding = UDim.new(0, 8)
-blist.Parent = BotScroll
+local alist = Instance.new("UIListLayout")
+alist.Padding = UDim.new(0, 12)
+alist.HorizontalAlignment = Enum.HorizontalAlignment.Center
+alist.Parent = AltsScroll
+
+local apad = Instance.new("UIPadding")
+apad.PaddingTop = UDim.new(0, 10)
+apad.PaddingBottom = UDim.new(0, 10)
+apad.Parent = AltsScroll
+
+local BotScroll = AltsScroll -- Redirecting older BotScroll variable to the main scroll for compatibility
 
 local function addBotCard(data)
     local card = Instance.new("Frame")
@@ -508,8 +517,8 @@ local function addBotCard(data)
     
     -- Health bar background
     local hpBg = Instance.new("Frame")
-    hpBg.Size = UDim2.new(0.55, 0, 0, 4)
-    hpBg.Position = UDim2.new(0, 56, 0, 47)
+    hpBg.Size = UDim2.new(0.5, 0, 0, 2)
+    hpBg.Position = UDim2.new(0, 56, 0, 48)
     hpBg.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     hpBg.BorderSizePixel = 0
     hpBg.Parent = card
@@ -923,15 +932,15 @@ local function createInput(parent, text, min, max, default, callback)
     end)
 end
 
-createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig("AutoDrop", v) end)
-createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig("FollowOwner", v) end)
-createToggle(Tabs.Alts, "Auto Reset if KO'd", true, function(v) getgenv().BotConfig.AutoResetKO = v; syncConfig("AutoResetKO", v) end)
-createInput(Tabs.Alts, "Drop Amount (Max 15k)", 1, 15000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig("DropAmount", v) end)
+createToggle(AltsScroll, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig("AutoDrop", v) end)
+createToggle(AltsScroll, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig("FollowOwner", v) end)
+createToggle(AltsScroll, "Auto Reset if KO'd", true, function(v) getgenv().BotConfig.AutoResetKO = v; syncConfig("AutoResetKO", v) end)
+createInput(AltsScroll, "Drop Amount (Max 15k)", 1, 15000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig("DropAmount", v) end)
 
 local QuickSetup = Instance.new("Frame")
 QuickSetup.Size = UDim2.new(0.95, 0, 0, 80)
 QuickSetup.BackgroundTransparency = 1
-QuickSetup.Parent = Tabs.Alts
+QuickSetup.Parent = AltsScroll
 
 local qsLabel = Instance.new("TextLabel")
 qsLabel.Size = UDim2.new(1, 0, 0, 20)
@@ -948,10 +957,10 @@ qsGrid.CellPadding = UDim2.new(0.02, 0, 0, 5)
 qsGrid.Parent = QuickSetup
 
 local SetupTPs = {
+    School = CFrame.new(-548.1, 21.2, 281.4),
     Club = CFrame.new(-266.1, -2.2, -367.2),
-    Bank = CFrame.new(-38.3, -29.3, -283.4),
     Casino = CFrame.new(-853.3, 21.3, -135.2),
-    School = CFrame.new(-548.1, 21.2, 281.4)
+    Bank = CFrame.new(-402.12, 21.75, -283.98)
 }
 
 for name, cf in pairs(SetupTPs) do
@@ -994,6 +1003,22 @@ for name, cf in pairs(SetupTPs) do
         syncConfig("TargetCFrame", cf)
     end)
 end
+
+-- Horizontal Separator before bots
+local botSep = Instance.new("Frame")
+botSep.Size = UDim2.new(0.9, 0, 0, 1)
+botSep.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+botSep.BorderSizePixel = 0
+botSep.Parent = AltsScroll
+
+local botHeader = Instance.new("TextLabel")
+botHeader.Size = UDim2.new(1, 0, 0, 20)
+botHeader.BackgroundTransparency = 1
+botHeader.Text = "CONNECTED ALTS"
+botHeader.TextColor3 = Color3.fromRGB(180, 180, 180)
+botHeader.Font = Enum.Font.GothamBold
+botHeader.TextSize = 10
+botHeader.Parent = AltsScroll
 
 -- Buyers Tab Content
 local function updateBuyerList()
