@@ -404,6 +404,14 @@ local SidebarPadding = Instance.new("UIPadding")
 SidebarPadding.PaddingTop = UDim.new(0, 6)
 SidebarPadding.Parent = Sidebar
 
+local SideGrad = Instance.new("UIGradient")
+SideGrad.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 180))
+})
+SideGrad.Rotation = 90
+SideGrad.Parent = Sidebar
+
 local Pages = Instance.new("Frame")
 Pages.Size = UDim2.new(1, -165, 1, -85)
 Pages.Position = UDim2.new(0, 153, 0, 75)
@@ -537,33 +545,21 @@ local function createMasterToggle(parent, text, configKey)
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
     
-    local track = Instance.new("Frame")
-    track.Size = UDim2.new(0, 36, 0, 18)
-    track.Position = UDim2.new(1, -42, 0.5, 0)
-    track.AnchorPoint = Vector2.new(0, 0.5)
-    track.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    track.Parent = btn
+    local indicator = Instance.new("Frame")
+    indicator.Size = UDim2.new(0, 8, 0, 8)
+    indicator.Position = UDim2.new(1, -15, 0.5, 0)
+    indicator.AnchorPoint = Vector2.new(0.5, 0.5)
+    indicator.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    indicator.Parent = btn
     
-    local tc = Instance.new("UICorner")
-    tc.CornerRadius = UDim.new(1, 0)
-    tc.Parent = track
-    
-    local circle = Instance.new("Frame")
-    circle.Size = UDim2.new(0, 14, 0, 14)
-    circle.Position = UDim2.new(0, 2, 0.5, 0)
-    circle.AnchorPoint = Vector2.new(0, 0.5)
-    circle.BackgroundColor3 = Color3.new(1, 1, 1)
-    circle.Parent = track
-    
-    local cc = Instance.new("UICorner")
-    cc.CornerRadius = UDim.new(1, 0)
-    cc.Parent = circle
+    local ic = Instance.new("UICorner")
+    ic.CornerRadius = UDim.new(1, 0)
+    ic.Parent = indicator
 
     local function update()
         local enabled = getgenv().BotConfig[configKey]
-        TweenService:Create(btn, TweenInfo.new(0.25), {TextColor3 = enabled and Color3.new(1,1,1) or Color3.fromRGB(140, 140, 160)}):Play()
-        TweenService:Create(track, TweenInfo.new(0.25), {BackgroundColor3 = enabled and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 50)}):Play()
-        TweenService:Create(circle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = enabled and UDim2.new(1, -16, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = enabled and Color3.new(1,1,1) or Color3.fromRGB(140, 140, 160)}):Play()
+        TweenService:Create(indicator, TweenInfo.new(0.2), {BackgroundColor3 = enabled and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(40, 40, 50)}):Play()
     end
 
     btn.MouseButton1Click:Connect(function()
@@ -764,26 +760,28 @@ task.spawn(function()
                 local files = listfiles("")
                 local onlineCount = 0
                 local droppingCount = 0
-                local totalCash = 0
-                
+                local totalBotCash = 0
+
                 for _, f in pairs(files) do
                     if f:match("status_.*%.json") then
-                        local content = readfile(f)
-                        local data = HttpService:JSONDecode(content)
-                        if os.time() - data.LastUpdate < 15 then 
-                            onlineCount = onlineCount + 1
-                            if data.Status == "Dropping" then
-                                droppingCount = droppingCount + 1
+                        pcall(function()
+                            local content = readfile(f)
+                            local data = HttpService:JSONDecode(content)
+                            if os.time() - data.LastUpdate < 20 then
+                                onlineCount = onlineCount + 1
+                                if data.Status == "Dropping" then
+                                    droppingCount = droppingCount + 1
+                                end
+                                totalBotCash = totalBotCash + (data.Cash or 0)
+                                addBotCard(data)
                             end
-                            totalCash = totalCash + data.Cash
-                            addBotCard(data)
-                        end
+                        end)
                     end
                 end
                 
                 onlineStat.Text = tostring(onlineCount)
                 droppingStat.Text = tostring(droppingCount)
-                totalCashStat.Text = "$" .. tostring(totalCash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+                totalCashStat.Text = "$" .. tostring(totalBotCash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
             end)
         end
     end
@@ -1044,34 +1042,34 @@ local function createToggle(parent, text, default, callback)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
     
-    local track = Instance.new("TextButton")
-    track.Size = UDim2.new(0, 38, 0, 20)
-    track.Position = UDim2.new(1, -53, 0.5, 0)
-    track.AnchorPoint = Vector2.new(0, 0.5)
-    track.BackgroundColor3 = default and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(30, 30, 40)
-    track.Text = ""
-    track.Parent = frame
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 40, 0, 20)
+    btn.Position = UDim2.new(1, -50, 0.5, 0)
+    btn.AnchorPoint = Vector2.new(0, 0.5)
+    btn.BackgroundColor3 = default and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(30, 30, 30)
+    btn.Text = ""
+    btn.Parent = frame
     
     local bc = Instance.new("UICorner")
-    bc.CornerRadius = UDim.new(1, 0) -- Pill shape
-    bc.Parent = track
+    bc.CornerRadius = UDim.new(1, 0)
+    bc.Parent = btn
     
     local circle = Instance.new("Frame")
     circle.Size = UDim2.new(0, 16, 0, 16)
     circle.Position = default and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
     circle.AnchorPoint = Vector2.new(0, 0.5)
     circle.BackgroundColor3 = Color3.new(1, 1, 1)
-    circle.Parent = track
+    circle.Parent = btn
     
     local cc = Instance.new("UICorner")
     cc.CornerRadius = UDim.new(1, 0)
     cc.Parent = circle
     
     local state = default
-    track.MouseButton1Click:Connect(function()
+    btn.MouseButton1Click:Connect(function()
         state = not state
-        TweenService:Create(track, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundColor3 = state and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(30, 30, 40)}):Play()
-        TweenService:Create(circle, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = state and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(0, 100, 255) or Color3.fromRGB(30, 30, 30)}):Play()
+        TweenService:Create(circle, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)}):Play()
         callback(state)
     end)
 end
@@ -1138,9 +1136,6 @@ local function createInput(parent, text, min, max, default, callback)
     end)
 end
 
-createToggle(AltsScroll, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig("AutoDrop", v) end)
-createToggle(AltsScroll, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig("FollowOwner", v) end)
-createToggle(AltsScroll, "Auto Reset if KO'd", true, function(v) getgenv().BotConfig.AutoResetKO = v; syncConfig("AutoResetKO", v) end)
 createInput(AltsScroll, "Drop Amount (Max 15k)", 1, 15000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig("DropAmount", v) end)
 
 local QuickSetup = Instance.new("Frame")
@@ -1473,8 +1468,9 @@ end
 
 task.spawn(function()
     while task.wait(1) do
+        if getgenv().Kamaik_Unloaded then break end
         pcall(function()
-            if TabContainers.Stats.Visible then
+            if TabContainers.Stats.GroupTransparency < 0.9 then
                 StatsList:ClearAllChildren()
                 local l = Instance.new("UIListLayout")
                 l.Padding = UDim.new(0, 6)
@@ -1496,16 +1492,16 @@ task.spawn(function()
                 local cashHr = math.floor((earned / math.max(1, sessionTime)) * 3600)
 
                 createStatRow("SESSION UPTIME", string.format("%02d:%02d:%02d", hours, minutes, seconds), Color3.fromRGB(0, 150, 255))
-                createStatRow("CASH EARNED", "$" .. tostring(earned):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(0, 255, 120))
-                createStatRow("CASH PER HOUR", "$" .. tostring(cashHr):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(200, 255, 0))
+                createStatRow("CASH EARNED (YOU)", "$" .. tostring(earned):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(0, 255, 120))
+                createStatRow("CASH PER HOUR (YOU)", "$" .. tostring(cashHr):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""), Color3.fromRGB(200, 255, 0))
                 
                 local header = Instance.new("TextLabel")
-                header.Size = UDim2.new(0.9, 0, 0, 25)
+                header.Size = UDim2.new(0.9, 0, 0, 35)
                 header.BackgroundTransparency = 1
-                header.Text = "BOT WORKFORCE DETAILS"
-                header.TextColor3 = Color3.fromRGB(100, 100, 120)
+                header.Text = "BOT WORKFORCE ANALYTICS"
+                header.TextColor3 = Color3.fromRGB(120, 120, 140)
                 header.Font = Enum.Font.GothamBold
-                header.TextSize = 9
+                header.TextSize = 10
                 header.Parent = StatsList
 
                 local files = listfiles("")
@@ -1517,6 +1513,11 @@ task.spawn(function()
                         end
                     end
                 end
+
+                local resetBtn = createMiscBtn(StatsList, "RESET SESSION METRICS", function()
+                    InitialCash = LocalPlayer.DataFolder.Currency.Value
+                    SessionStart = os.time()
+                end)
             end
         end)
     end
