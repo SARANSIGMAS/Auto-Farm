@@ -703,10 +703,10 @@ task.spawn(function()
     end
 end)
 
-local function createSidebarBtn(name, iconId)
+local function createSidebarBtn(name)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.9, 0, 0, 36)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     btn.BackgroundTransparency = 1
     btn.Text = ""
     btn.AutoButtonColor = false
@@ -716,46 +716,29 @@ local function createSidebarBtn(name, iconId)
     c.CornerRadius = UDim.new(0, 8)
     c.Parent = btn
     
-    local btnStroke = Instance.new("UIStroke")
-    btnStroke.Color = Color3.fromRGB(0, 120, 255)
-    btnStroke.Thickness = 1.5
-    btnStroke.Transparency = 1
-    btnStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    btnStroke.Parent = btn
-
-    local icon = Instance.new("ImageLabel")
-    icon.Size = UDim2.new(0, 18, 0, 18)
-    icon.Position = UDim2.new(0, 12, 0.5, 0)
-    icon.AnchorPoint = Vector2.new(0, 0.5)
-    icon.BackgroundTransparency = 1
-    icon.Image = "rbxassetid://" .. iconId
-    icon.ImageColor3 = Color3.fromRGB(150, 150, 150)
-    icon.Parent = btn
-    
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -45, 1, 0)
-    label.Position = UDim2.new(0, 40, 0, 0)
+    label.Name = "TextLabel"
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = name
-    label.TextColor3 = Color3.fromRGB(150, 150, 150)
+    label.TextColor3 = Color3.fromRGB(130, 130, 150)
     label.Font = Enum.Font.GothamMedium
     label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextXAlignment = Enum.TextXAlignment.Center
     label.Parent = btn
     
     btn.MouseEnter:Connect(function()
         if TabContainers[name].Visible == false then
             TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0.8}):Play()
             TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.new(1, 1, 1)}):Play()
-            TweenService:Create(icon, TweenInfo.new(0.2), {ImageColor3 = Color3.new(1, 1, 1)}):Play()
         end
     end)
     
     btn.MouseLeave:Connect(function()
         if TabContainers[name].Visible == false then
             TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
-            TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play()
-            TweenService:Create(icon, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
+            TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(130, 130, 150)}):Play()
         end
     end)
 
@@ -764,28 +747,24 @@ local function createSidebarBtn(name, iconId)
         for _, b in pairs(Sidebar:GetChildren()) do
             if b:IsA("TextButton") then
                 TweenService:Create(b, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
-                TweenService:Create(b.TextLabel, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play()
-                TweenService:Create(b.ImageLabel, TweenInfo.new(0.2), {ImageColor3 = Color3.fromRGB(150, 150, 150)}):Play()
-                if b:FindFirstChildOfClass("UIStroke") then
-                    TweenService:Create(b:FindFirstChildOfClass("UIStroke"), TweenInfo.new(0.2), {Transparency = 1}):Play()
+                if b:FindFirstChild("TextLabel") then
+                    TweenService:Create(b.TextLabel, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(130, 130, 150)}):Play()
                 end
             end
         end
         TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
         TweenService:Create(label, TweenInfo.new(0.2), {TextColor3 = Color3.new(1, 1, 1)}):Play()
-        TweenService:Create(icon, TweenInfo.new(0.2), {ImageColor3 = Color3.new(1, 1, 1)}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
     end)
     
     return btn
 end
 
-createSidebarBtn("Alts", "10734950309")
-createSidebarBtn("Teleport", "10723418498")
-createSidebarBtn("Buyers", "10734897102")
-createSidebarBtn("Stats", "10723398439")
-createSidebarBtn("Misc", "10723413498")
-createSidebarBtn("Settings", "10723374431")
+createSidebarBtn("Alts")
+createSidebarBtn("Teleport")
+createSidebarBtn("Buyers")
+createSidebarBtn("Stats")
+createSidebarBtn("Misc")
+createSidebarBtn("Settings")
 
 showPage("Alts")
 
