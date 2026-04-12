@@ -434,11 +434,10 @@ local function showPage(name)
     for n, container in pairs(TabContainers) do
         if n == name then
             container.Visible = true
-            container.Position = UDim2.new(0, 15, 0, 0)
-            TweenService:Create(container, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {GroupTransparency = 0, Position = UDim2.new(0, 0, 0, 0)}):Play()
+            TweenService:Create(container, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
         else
-            TweenService:Create(container, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {GroupTransparency = 1, Position = UDim2.new(0, -15, 0, 0)}):Play()
-            task.delay(0.35, function()
+            TweenService:Create(container, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 1}):Play()
+            task.delay(0.25, function()
                 if container.GroupTransparency >= 0.99 then
                     container.Visible = false
                 end
@@ -539,10 +538,6 @@ local function createMasterToggle(parent, text, configKey)
     update()
 end
 
-local onlineStat = createStat("ONLINE BOTS", "0")
-local droppingStat = createStat("DROPPING", "0", Color3.fromRGB(0, 255, 100))
-local totalCashStat = createStat("TOTAL CASH", "$0")
-
 -- FIXED LAYOUT: Consolidated Alts Tab into one Scroll to prevent overlap
 local AltsScroll = Instance.new("ScrollingFrame")
 AltsScroll.Size = UDim2.new(1, 0, 1, 0)
@@ -550,7 +545,8 @@ AltsScroll.BackgroundTransparency = 1
 AltsScroll.BorderSizePixel = 0
 AltsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 AltsScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-AltsScroll.ScrollBarThickness = 2
+AltsScroll.ScrollBarThickness = 1
+AltsScroll.ScrollBarImageColor3 = Color3.fromRGB(40, 40, 50)
 AltsScroll.Parent = Tabs.Alts
 
 local alist = Instance.new("UIListLayout")
@@ -563,6 +559,12 @@ apad.PaddingTop = UDim.new(0, 10)
 apad.PaddingBottom = UDim.new(0, 10)
 apad.Parent = AltsScroll
 
+StatsRow.Parent = AltsScroll
+
+local onlineStat = createStat("ONLINE BOTS", "0")
+local droppingStat = createStat("DROPPING", "0", Color3.fromRGB(0, 255, 100))
+local totalCashStat = createStat("TOTAL CASH", "$0")
+
 local MasterControlFrame = Instance.new("Frame")
 MasterControlFrame.Size = UDim2.new(0.97, 0, 0, 45)
 MasterControlFrame.BackgroundTransparency = 1
@@ -571,14 +573,31 @@ MasterControlFrame.Parent = AltsScroll
 local mcLayout = Instance.new("UIListLayout")
 mcLayout.FillDirection = Enum.FillDirection.Horizontal
 mcLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-mcLayout.Padding = UDim.new(0, 15)
+mcLayout.Padding = UDim.new(0, 8)
 mcLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 mcLayout.Parent = MasterControlFrame
 
 createMasterToggle(MasterControlFrame, "AUTO DROP", "AutoDrop")
 createMasterToggle(MasterControlFrame, "FOLLOW OWNER", "FollowOwner")
 
-local BotScroll = AltsScroll -- Redirecting older BotScroll variable to the main scroll for compatibility
+local tpAll = Instance.new("TextButton")
+tpAll.Size = UDim2.new(0, 120, 0, 32)
+tpAll.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+tpAll.Text = "TP ALL BOTS"
+tpAll.TextColor3 = Color3.new(1, 1, 1)
+tpAll.Font = Enum.Font.GothamBold
+tpAll.TextSize = 10
+tpAll.Parent = MasterControlFrame
+
+local tc = Instance.new("UICorner")
+tc.CornerRadius = UDim.new(0, 6)
+tc.Parent = tpAll
+
+tpAll.MouseButton1Click:Connect(function()
+    syncConfig("OwnerPos", LocalPlayer.Character and LocalPlayer.Character:GetPivot() or CFrame.new())
+end)
+
+local BotScroll = AltsScroll
 
 local function addBotCard(data)
     local card = Instance.new("Frame")
