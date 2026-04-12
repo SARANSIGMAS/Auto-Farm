@@ -68,8 +68,8 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 620, 0, 440)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
-MainFrame.BackgroundTransparency = 0.1
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+MainFrame.BackgroundTransparency = 0
 MainFrame.BorderSizePixel = 0
 MainFrame.ZIndex = 2
 MainFrame.Parent = ScreenGui
@@ -150,60 +150,104 @@ strokeGradient.Color = ColorSequence.new({
 strokeGradient.Parent = MainStroke
 
 local Topbar = Instance.new("Frame")
-Topbar.Size = UDim2.new(1, -20, 0, 60)
-Topbar.Position = UDim2.new(0, 10, 0, 10)
-Topbar.BackgroundTransparency = 1
+Topbar.Size = UDim2.new(1, 0, 0, 65)
+Topbar.Position = UDim2.new(0, 0, 0, 0)
+Topbar.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+Topbar.BackgroundTransparency = 0
+Topbar.BorderSizePixel = 0
 Topbar.ZIndex = 5
 Topbar.Parent = MainFrame
 
-local TopGradient = Instance.new("UIGradient")
-TopGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 15, 15)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(25, 25, 25)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 15, 15))
-})
-TopGradient.Parent = Topbar
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 14)
+topCorner.Parent = Topbar
+
+-- Bottom fill to square off the bottom corners of topbar
+local topFill = Instance.new("Frame")
+topFill.Size = UDim2.new(1, 0, 0, 14)
+topFill.Position = UDim2.new(0, 0, 1, -14)
+topFill.BackgroundColor3 = Color3.fromRGB(16, 16, 20)
+topFill.BorderSizePixel = 0
+topFill.ZIndex = 5
+topFill.Parent = Topbar
+
+local topSep = Instance.new("Frame")
+topSep.Size = UDim2.new(1, -30, 0, 1)
+topSep.Position = UDim2.new(0, 15, 1, 0)
+topSep.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+topSep.BorderSizePixel = 0
+topSep.ZIndex = 6
+topSep.Parent = Topbar
 
 local ProfilePic = Instance.new("ImageLabel")
-ProfilePic.Size = UDim2.new(0, 42, 0, 42)
-ProfilePic.Position = UDim2.new(0, 5, 0.5, 0)
+ProfilePic.Size = UDim2.new(0, 38, 0, 38)
+ProfilePic.Position = UDim2.new(0, 15, 0.5, 0)
 ProfilePic.AnchorPoint = Vector2.new(0, 0.5)
 ProfilePic.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 ProfilePic.Image = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId .. "&w=150&h=150"
 ProfilePic.ZIndex = 6
 ProfilePic.Parent = Topbar
 
+local PicCorner = Instance.new("UICorner")
+PicCorner.CornerRadius = UDim.new(1, 0)
+PicCorner.Parent = ProfilePic
+
 local PicStroke = Instance.new("UIStroke")
 PicStroke.Color = Color3.fromRGB(0, 120, 255)
 PicStroke.Thickness = 2
 PicStroke.Parent = ProfilePic
 
+-- Online indicator dot
+local onlineDot = Instance.new("Frame")
+onlineDot.Size = UDim2.new(0, 10, 0, 10)
+onlineDot.Position = UDim2.new(1, -2, 1, -2)
+onlineDot.AnchorPoint = Vector2.new(0.5, 0.5)
+onlineDot.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+onlineDot.ZIndex = 7
+onlineDot.Parent = ProfilePic
+
+local dotCorner = Instance.new("UICorner")
+dotCorner.CornerRadius = UDim.new(1, 0)
+dotCorner.Parent = onlineDot
+
 local WelcomeLabel = Instance.new("TextLabel")
-WelcomeLabel.Size = UDim2.new(0, 180, 0, 20)
-WelcomeLabel.Position = UDim2.new(0, 60, 0, 12)
+WelcomeLabel.Size = UDim2.new(0, 200, 0, 18)
+WelcomeLabel.Position = UDim2.new(0, 65, 0, 14)
 WelcomeLabel.BackgroundTransparency = 1
-WelcomeLabel.Text = "Welcome, " .. LocalPlayer.Name .. "!"
+WelcomeLabel.Text = "Welcome, " .. LocalPlayer.DisplayName
 WelcomeLabel.TextColor3 = Color3.new(1, 1, 1)
 WelcomeLabel.Font = Enum.Font.GothamBold
-WelcomeLabel.TextSize = 15
+WelcomeLabel.TextSize = 14
 WelcomeLabel.TextXAlignment = Enum.TextXAlignment.Left
 WelcomeLabel.ZIndex = 6
 WelcomeLabel.Parent = Topbar
 
+local SubLabel = Instance.new("TextLabel")
+SubLabel.Size = UDim2.new(0, 200, 0, 14)
+SubLabel.Position = UDim2.new(0, 65, 0, 33)
+SubLabel.BackgroundTransparency = 1
+SubLabel.Text = "@" .. LocalPlayer.Name .. " • Command Center"
+SubLabel.TextColor3 = Color3.fromRGB(100, 100, 120)
+SubLabel.Font = Enum.Font.GothamMedium
+SubLabel.TextSize = 10
+SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubLabel.ZIndex = 6
+SubLabel.Parent = Topbar
+
 local CashLabel = Instance.new("TextLabel")
 CashLabel.Size = UDim2.new(0, 150, 0, 20)
-CashLabel.Position = UDim2.new(0, 60, 0, 28)
+CashLabel.Position = UDim2.new(0, 65, 0, 46)
 CashLabel.BackgroundTransparency = 1
-CashLabel.Text = "$$$ Loading..."
-CashLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+CashLabel.Text = "$0"
+CashLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
 CashLabel.Font = Enum.Font.GothamBold
-CashLabel.TextSize = 13
+CashLabel.TextSize = 12
 CashLabel.TextXAlignment = Enum.TextXAlignment.Left
 CashLabel.ZIndex = 6
 CashLabel.Parent = Topbar
 
 task.spawn(function()
-    while task.wait(5) do
+    while task.wait(2) do
         local df = LocalPlayer:FindFirstChild("DataFolder")
         local cur = df and df:FindFirstChild("Currency")
         if cur then
@@ -390,13 +434,22 @@ createMiniBtn("Cash Counter", function() CashPopup.Visible = not CashPopup.Visib
 createMiniBtn("Account Util", function() UtilPopup.Visible = not UtilPopup.Visible end)
 
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 140, 1, -85)
-Sidebar.Position = UDim2.new(0, 15, 0, 75)
-Sidebar.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Sidebar.BackgroundTransparency = 0.3
+Sidebar.Size = UDim2.new(0, 140, 1, -75)
+Sidebar.Position = UDim2.new(0, 0, 0, 66)
+Sidebar.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+Sidebar.BackgroundTransparency = 0
 Sidebar.BorderSizePixel = 0
 Sidebar.ZIndex = 3
 Sidebar.Parent = MainFrame
+
+-- Sidebar right separator
+local sidebarSep = Instance.new("Frame")
+sidebarSep.Size = UDim2.new(0, 1, 1, -10)
+sidebarSep.Position = UDim2.new(1, 0, 0, 5)
+sidebarSep.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+sidebarSep.BorderSizePixel = 0
+sidebarSep.ZIndex = 4
+sidebarSep.Parent = Sidebar
 
 local SidebarCorner = Instance.new("UICorner")
 SidebarCorner.CornerRadius = UDim.new(0, 10)
@@ -412,10 +465,11 @@ SidebarPadding.PaddingTop = UDim.new(0, 8)
 SidebarPadding.Parent = Sidebar
 
 local Pages = Instance.new("Frame")
-Pages.Size = UDim2.new(1, -170, 1, -85)
-Pages.Position = UDim2.new(0, 160, 0, 75)
+Pages.Size = UDim2.new(1, -150, 1, -75)
+Pages.Position = UDim2.new(0, 145, 0, 70)
 Pages.BackgroundTransparency = 1
 Pages.ZIndex = 2
+Pages.ClipsDescendants = true
 Pages.Parent = MainFrame
 
 local function createPage(name)
@@ -454,6 +508,7 @@ local function addTab(name)
 end
 
 addTab("Alts")
+addTab("Teleport")
 addTab("Buyers")
 addTab("Stats")
 addTab("Misc")
@@ -476,46 +531,51 @@ local function showPage(name)
 end
 
 local StatsRow = Instance.new("Frame")
-StatsRow.Size = UDim2.new(0.95, 0, 0, 45)
-StatsRow.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+StatsRow.Size = UDim2.new(0.97, 0, 0, 50)
+StatsRow.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
 StatsRow.Parent = Tabs.Alts
 
 local src = Instance.new("UICorner")
-src.CornerRadius = UDim.new(0, 8)
+src.CornerRadius = UDim.new(0, 10)
 src.Parent = StatsRow
+
+local srStroke = Instance.new("UIStroke")
+srStroke.Color = Color3.fromRGB(30, 30, 40)
+srStroke.Thickness = 1
+srStroke.Parent = StatsRow
 
 local StatLayout = Instance.new("UIListLayout")
 StatLayout.FillDirection = Enum.FillDirection.Horizontal
 StatLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-StatLayout.Padding = UDim.new(0, 15)
+StatLayout.Padding = UDim.new(0, 0)
 StatLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 StatLayout.Parent = StatsRow
 
 local function createStat(label, value, color)
     local f = Instance.new("Frame")
-    f.Size = UDim2.new(0, 110, 0, 35)
+    f.Size = UDim2.new(0.333, 0, 1, 0)
     f.BackgroundTransparency = 1
     f.Parent = StatsRow
     
     local v = Instance.new("TextLabel")
     v.Name = "Value"
-    v.Size = UDim2.new(1, 0, 0, 20)
-    v.Position = UDim2.new(0, 0, 0, 0)
+    v.Size = UDim2.new(1, 0, 0, 22)
+    v.Position = UDim2.new(0, 0, 0, 6)
     v.BackgroundTransparency = 1
     v.Text = value
     v.TextColor3 = color or Color3.new(1, 1, 1)
     v.Font = Enum.Font.GothamBold
-    v.TextSize = 14
+    v.TextSize = 16
     v.Parent = f
     
     local l = Instance.new("TextLabel")
-    l.Size = UDim2.new(1, 0, 0, 15)
-    l.Position = UDim2.new(0, 0, 0, 18)
+    l.Size = UDim2.new(1, 0, 0, 14)
+    l.Position = UDim2.new(0, 0, 0, 28)
     l.BackgroundTransparency = 1
     l.Text = label
-    l.TextColor3 = Color3.fromRGB(150, 150, 150)
+    l.TextColor3 = Color3.fromRGB(80, 80, 100)
     l.Font = Enum.Font.GothamMedium
-    l.TextSize = 10
+    l.TextSize = 9
     l.Parent = f
     return v
 end
@@ -540,74 +600,100 @@ blist.Parent = BotScroll
 
 local function addBotCard(data)
     local card = Instance.new("Frame")
-    card.Size = UDim2.new(0.95, 0, 0, 75)
-    card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    card.Size = UDim2.new(0.97, 0, 0, 65)
+    card.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
     card.Parent = BotScroll
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 10)
     c.Parent = card
     
-    local mainStroke = Instance.new("UIStroke")
-    mainStroke.Color = data.Health < 50 and Color3.new(1, 0, 0) or Color3.fromRGB(0, 255, 120)
-    mainStroke.Thickness = 1.5
-    mainStroke.Parent = card
+    -- Left color accent bar
+    local accentBar = Instance.new("Frame")
+    accentBar.Size = UDim2.new(0, 3, 0.7, 0)
+    accentBar.Position = UDim2.new(0, 0, 0.15, 0)
+    accentBar.BackgroundColor3 = data.Health < 50 and Color3.new(1, 0, 0) or Color3.fromRGB(0, 255, 120)
+    accentBar.BorderSizePixel = 0
+    accentBar.ZIndex = 3
+    accentBar.Parent = card
     
-    local glowStroke = Instance.new("UIStroke")
-    glowStroke.Color = mainStroke.Color
-    glowStroke.Thickness = 3
-    glowStroke.Transparency = 0.6
-    glowStroke.Parent = card
+    local abCorner = Instance.new("UICorner")
+    abCorner.CornerRadius = UDim.new(0, 2)
+    abCorner.Parent = accentBar
     
-    local gsGradient = Instance.new("UIGradient")
-    gsGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0.4),
-        NumberSequenceKeypoint.new(1, 1)
-    })
-    gsGradient.Parent = glowStroke
+    -- Avatar
+    local avatar = Instance.new("ImageLabel")
+    avatar.Size = UDim2.new(0, 36, 0, 36)
+    avatar.Position = UDim2.new(0, 12, 0.5, 0)
+    avatar.AnchorPoint = Vector2.new(0, 0.5)
+    avatar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    avatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (data.UserId or 0) .. "&w=150&h=150"
+    avatar.Parent = card
     
-    task.spawn(function()
-        while card.Parent do
-            TweenService:Create(glowStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Thickness = 5, Transparency = 0.8}):Play()
-            task.wait(1.5)
-            TweenService:Create(glowStroke, TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Thickness = 3, Transparency = 0.6}):Play()
-            task.wait(1.5)
-        end
-    end)
+    local avCorner = Instance.new("UICorner")
+    avCorner.CornerRadius = UDim.new(1, 0)
+    avCorner.Parent = avatar
     
     local name = Instance.new("TextLabel")
-    name.Position = UDim2.new(0, 15, 0, 10)
-    name.Size = UDim2.new(1, -30, 0, 20)
+    name.Position = UDim2.new(0, 56, 0, 8)
+    name.Size = UDim2.new(1, -120, 0, 18)
     name.BackgroundTransparency = 1
-    name.Text = data.DisplayName .. " (@" .. data.Name .. ")"
+    name.Text = data.DisplayName .. "  (@" .. data.Name .. ")"
     name.TextColor3 = Color3.new(1, 1, 1)
     name.Font = Enum.Font.GothamBold
-    name.TextSize = 14
+    name.TextSize = 12
     name.TextXAlignment = Enum.TextXAlignment.Left
     name.Parent = card
     
     local cash = Instance.new("TextLabel")
-    cash.Position = UDim2.new(0, 15, 0, 32)
-    cash.Size = UDim2.new(0.5, 0, 0, 18)
+    cash.Position = UDim2.new(0, 56, 0, 27)
+    cash.Size = UDim2.new(0.4, 0, 0, 14)
     cash.BackgroundTransparency = 1
-    cash.Text = "Cash: $" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+    cash.Text = "$" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
     cash.TextColor3 = Color3.fromRGB(0, 255, 100)
-    cash.Font = Enum.Font.GothamMedium
-    cash.TextSize = 12
+    cash.Font = Enum.Font.GothamBold
+    cash.TextSize = 11
     cash.TextXAlignment = Enum.TextXAlignment.Left
     cash.Parent = card
     
-    local health = Instance.new("TextLabel")
-    health.Position = UDim2.new(0, 15, 0, 52)
-    health.Size = UDim2.new(0.5, 0, 0, 18)
-    health.BackgroundTransparency = 1
-    health.Text = "Health: " .. data.Health .. "%"
-    health.TextColor3 = Color3.fromRGB(200, 200, 200)
-    health.Font = Enum.Font.GothamMedium
-    health.TextSize = 11
-    health.TextXAlignment = Enum.TextXAlignment.Left
-    health.Parent = card
+    -- Health bar background
+    local hpBg = Instance.new("Frame")
+    hpBg.Size = UDim2.new(0.55, 0, 0, 4)
+    hpBg.Position = UDim2.new(0, 56, 0, 47)
+    hpBg.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    hpBg.BorderSizePixel = 0
+    hpBg.Parent = card
+    
+    local hpBgC = Instance.new("UICorner")
+    hpBgC.CornerRadius = UDim.new(1, 0)
+    hpBgC.Parent = hpBg
+    
+    -- Health bar fill
+    local hpFill = Instance.new("Frame")
+    hpFill.Size = UDim2.new(math.clamp(data.Health / 100, 0, 1), 0, 1, 0)
+    hpFill.BackgroundColor3 = data.Health < 50 and Color3.new(1, 0.3, 0.3) or Color3.fromRGB(0, 255, 120)
+    hpFill.BorderSizePixel = 0
+    hpFill.Parent = hpBg
+    
+    local hpFillC = Instance.new("UICorner")
+    hpFillC.CornerRadius = UDim.new(1, 0)
+    hpFillC.Parent = hpFill
+    
+    -- Status badge
+    local badge = Instance.new("TextLabel")
+    badge.Size = UDim2.new(0, 60, 0, 20)
+    badge.Position = UDim2.new(1, -70, 0.5, 0)
+    badge.AnchorPoint = Vector2.new(0, 0.5)
+    badge.BackgroundColor3 = data.Status == "Farming" and Color3.fromRGB(0, 40, 20) or Color3.fromRGB(30, 30, 30)
+    badge.Text = data.Status
+    badge.TextColor3 = data.Status == "Farming" and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(120, 120, 120)
+    badge.Font = Enum.Font.GothamBold
+    badge.TextSize = 9
+    badge.Parent = card
+    
+    local badgeC = Instance.new("UICorner")
+    badgeC.CornerRadius = UDim.new(0, 4)
+    badgeC.Parent = badge
 end
 
 task.spawn(function()
@@ -725,97 +811,136 @@ local function createSidebarBtn(name, iconId)
 end
 
 createSidebarBtn("Alts", "10734950309")
+createSidebarBtn("Teleport", "10723351910")
 createSidebarBtn("Buyers", "10734897102")
 createSidebarBtn("Stats", "10723398439")
 createSidebarBtn("Misc", "10723351910")
 createSidebarBtn("Settings", "10723374431")
--- Topbar Controls
-local Topbar = Instance.new("Frame")
-Topbar.Size = UDim2.new(1, -40, 0, 40)
-Topbar.Position = UDim2.new(0, 20, 0, 80)
-Topbar.BackgroundTransparency = 1
-Topbar.Parent = Tabs.Alts
-
-local tbGrid = Instance.new("UIGridLayout")
-tbGrid.CellSize = UDim2.new(0.23, 0, 0, 30)
-tbGrid.CellPadding = UDim2.new(0.02, 0, 0, 5)
-tbGrid.Parent = Topbar
-
-local function createTopBtn(text, color, callback)
-    local btn = Instance.new("TextButton")
-    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-    btn.Text = text
-    btn.TextColor3 = color or Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 10
-    btn.AutoButtonColor = false
-    btn.Parent = Topbar
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = btn
-    
-    local s = Instance.new("UIStroke")
-    s.Color = color or Color3.fromRGB(0, 200, 255)
-    s.Thickness = 1.5
-    s.Transparency = 1
-    s.Parent = btn
-    
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
-    end)
-    
-    btn.MouseButton1Click:Connect(callback)
-end
-
-createTopBtn("TP CLUB", Color3.fromRGB(0, 120, 255), function()
-    getgenv().BotConfig.TargetCFrame = CFrame.new(-266.1, -2.2, -367.2)
-    syncConfig()
-end)
-createTopBtn("TP VAULT", Color3.fromRGB(0, 120, 255), function()
-    getgenv().BotConfig.TargetCFrame = CFrame.new(-38.3, -29.3, -283.4)
-    syncConfig()
-end)
-createTopBtn("CASH COUNTER", Color3.new(1, 1, 1), function()
-    createPopup("Total Cash Indicator", function(c)
-        local l = Instance.new("TextLabel")
-        l.Size = UDim2.new(1, 0, 1, 0)
-        l.BackgroundTransparency = 1
-        l.Text = "Calculating network total..."
-        l.TextColor3 = Color3.new(1, 1, 1)
-        l.Font = Enum.Font.GothamBold
-        l.TextSize = 18
-        l.Parent = c
-        
-        task.spawn(function()
-            while task.wait(3) do
-                local total = 0
-                if listfiles then
-                    for _, f in pairs(listfiles("")) do
-                        if f:match("status_.*%.json") then
-                            local data = HttpService:JSONDecode(readfile(f))
-                            if os.time() - data.LastUpdate < 15 then
-                                total = total + (data.Cash or 0)
-                            end
-                        end
-                    end
-                end
-                l.Text = "TOTAL CASH: $" .. tostring(total):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
-            end
-        end)
-    end)
-end)
-createTopBtn("UTIL PANEL", Color3.new(1, 1, 1), function()
-    showPage("Misc")
-end)
-
 
 showPage("Alts")
+
+-- Teleport Tab Content (Owner Teleport)
+local TeleportLocations = {
+    {Name = "Club", Position = CFrame.new(-266.1, -2.2, -367.2), Color = Color3.fromRGB(0, 150, 255)},
+    {Name = "Vault", Position = CFrame.new(-38.3, -29.3, -283.4), Color = Color3.fromRGB(255, 180, 0)},
+    {Name = "Bank", Position = CFrame.new(-38.3, -29.3, -283.4), Color = Color3.fromRGB(0, 255, 120)}
+}
+
+local tpHeader = Instance.new("TextLabel")
+tpHeader.Size = UDim2.new(0.95, 0, 0, 30)
+tpHeader.BackgroundTransparency = 1
+tpHeader.Text = "OWNER TELEPORT"
+tpHeader.TextColor3 = Color3.fromRGB(200, 200, 200)
+tpHeader.Font = Enum.Font.GothamBold
+tpHeader.TextSize = 12
+tpHeader.Parent = Tabs.Teleport
+
+for _, loc in ipairs(TeleportLocations) do
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.95, 0, 0, 50)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    frame.Parent = Tabs.Teleport
+    
+    local fc = Instance.new("UICorner")
+    fc.CornerRadius = UDim.new(0, 8)
+    fc.Parent = frame
+    
+    local indicator = Instance.new("Frame")
+    indicator.Size = UDim2.new(0, 4, 0.6, 0)
+    indicator.Position = UDim2.new(0, 8, 0.2, 0)
+    indicator.BackgroundColor3 = loc.Color
+    indicator.BorderSizePixel = 0
+    indicator.Parent = frame
+    
+    local ic = Instance.new("UICorner")
+    ic.CornerRadius = UDim.new(0, 2)
+    ic.Parent = indicator
+    
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(0.5, 0, 1, 0)
+    lbl.Position = UDim2.new(0, 20, 0, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = loc.Name
+    lbl.TextColor3 = Color3.new(1, 1, 1)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 14
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = frame
+    
+    local tpBtn = Instance.new("TextButton")
+    tpBtn.Size = UDim2.new(0, 80, 0, 30)
+    tpBtn.Position = UDim2.new(1, -90, 0.5, 0)
+    tpBtn.AnchorPoint = Vector2.new(0, 0.5)
+    tpBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
+    tpBtn.Text = "Teleport"
+    tpBtn.TextColor3 = loc.Color
+    tpBtn.Font = Enum.Font.GothamBold
+    tpBtn.TextSize = 11
+    tpBtn.AutoButtonColor = false
+    tpBtn.Parent = frame
+    
+    local tbc = Instance.new("UICorner")
+    tbc.CornerRadius = UDim.new(0, 6)
+    tbc.Parent = tpBtn
+    
+    tpBtn.MouseEnter:Connect(function()
+        TweenService:Create(tpBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
+    end)
+    tpBtn.MouseLeave:Connect(function()
+        TweenService:Create(tpBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(28, 28, 28)}):Play()
+    end)
+    
+    tpBtn.MouseButton1Click:Connect(function()
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = loc.Position
+        end
+    end)
+end
+
+local tpSep = Instance.new("Frame")
+tpSep.Size = UDim2.new(0.9, 0, 0, 1)
+tpSep.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+tpSep.BorderSizePixel = 0
+tpSep.Parent = Tabs.Teleport
+
+local tpBotHeader = Instance.new("TextLabel")
+tpBotHeader.Size = UDim2.new(0.95, 0, 0, 30)
+tpBotHeader.BackgroundTransparency = 1
+tpBotHeader.Text = "SEND ALL BOTS TO"
+tpBotHeader.TextColor3 = Color3.fromRGB(200, 200, 200)
+tpBotHeader.Font = Enum.Font.GothamBold
+tpBotHeader.TextSize = 12
+tpBotHeader.Parent = Tabs.Teleport
+
+for _, loc in ipairs(TeleportLocations) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.95, 0, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    btn.Text = "  Setup Bots → " .. loc.Name
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextSize = 13
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.AutoButtonColor = false
+    btn.Parent = Tabs.Teleport
+    
+    local bc = Instance.new("UICorner")
+    bc.CornerRadius = UDim.new(0, 8)
+    bc.Parent = btn
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(28, 28, 28)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(18, 18, 18)}):Play()
+    end)
+    
+    btn.MouseButton1Click:Connect(function()
+        getgenv().BotConfig.TargetCFrame = loc.Position
+        syncConfig()
+    end)
+end
 
 local function createToggle(parent, text, default, callback)
     local frame = Instance.new("Frame")
@@ -1198,10 +1323,19 @@ local function createMiscBtn(parent, text, callback)
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.GothamMedium
     btn.TextSize = 13
+    btn.AutoButtonColor = false
     btn.Parent = parent
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 8)
     c.Parent = btn
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(28, 28, 28)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(18, 18, 18)}):Play()
+    end)
+    
     btn.MouseButton1Click:Connect(callback)
 end
 
