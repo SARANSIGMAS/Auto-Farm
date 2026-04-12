@@ -5,8 +5,21 @@ local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
-local task = task
-local HttpService = game:GetService("HttpService")
+getgenv().BotConfig = {
+    OwnerUsername = LocalPlayer.Name,
+    AutoDrop = false,
+    FollowOwner = false,
+    DropAmount = 15000,
+    AntiWhiteScreen = true
+}
+
+local function syncConfig()
+    pcall(function()
+        writefile("bot_control.json", HttpService:JSONEncode(getgenv().BotConfig))
+    end)
+end
+
+syncConfig()
 
 task.spawn(function()
     while true do
@@ -25,40 +38,6 @@ task.spawn(function()
         task.wait(3)
     end
 end)
-
-getgenv().BotConfig = {
-    OwnerUsername = LocalPlayer.Name,
-    AutoDrop = false,
-    FollowOwner = false,
-    DropAmount = 15000,
-    AntiWhiteScreen = true
-}
-
-task.spawn(function()
-    while true do
-        pcall(function()
-            local df = LocalPlayer:FindFirstChild("DataFolder")
-            local stats = {
-                Name = LocalPlayer.Name,
-                DisplayName = LocalPlayer.DisplayName,
-                Cash = df and df:FindFirstChild("Currency") and df.Currency.Value or 0,
-                Health = math.floor(LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") and LocalPlayer.Character.Humanoid.Health or 0),
-                Status = getgenv().BotConfig.AutoDrop and "Farming" or "Idle",
-                LastUpdate = os.time()
-            }
-            writefile("status_" .. LocalPlayer.Name .. ".json", HttpService:JSONEncode(stats))
-        end)
-        task.wait(3)
-    end
-end)
-
-local function syncConfig()
-    pcall(function()
-        writefile("bot_control.json", HttpService:JSONEncode(getgenv().BotConfig))
-    end)
-end
-
-syncConfig()
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KamaikMaster"
@@ -331,12 +310,6 @@ local function addBotCard(data)
     card.Size = UDim2.new(0.95, 0, 0, 75)
     card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     card.Parent = BotScroll
-
-local function addBotCard(data)
-    local card = Instance.new("Frame")
-    card.Size = UDim2.new(0.95, 0, 0, 80)
-    card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    card.Parent = Tabs.Buyers -- Reusing Buyers as a dashboard for now or I'll make Dashboard
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 10)
@@ -475,7 +448,7 @@ createSidebarBtn("Stats", "10723348633")
 createSidebarBtn("Misc", "10723345518")
 createSidebarBtn("Settings", "10723346123")
 
-showPage("Alts") -- Default
+showPage("Alts")
 
 local function createToggle(parent, text, default, callback)
     local frame = Instance.new("Frame")
@@ -597,26 +570,10 @@ local function createSlider(parent, text, min, max, default, callback)
     end)
 end
 
-Tabs.Alts:AddParagraph({Title = "Bot Control", Content = "Configure your bots below."})
 createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig() end)
 createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig() end)
 createSlider(Tabs.Alts, "Drop Amount", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
 
-Tabs.Misc:AddParagraph({Title = "Mass Commands", Content = "Control all bots at once."})
-createMiscBtn(Tabs.Misc, "Reset All Bots", function()
-    getgenv().BotConfig.ResetSignal = true
-    syncConfig()
-    task.wait(1)
-    getgenv().BotConfig.ResetSignal = false
-    syncConfig()
-end)
-createMiscBtn(Tabs.Misc, "Bring All Bots", function()
-    getgenv().BotConfig.TargetCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
-    syncConfig()
-end)
-
-Tabs.Misc:AddParagraph({Title = "Utilities", Content = "Standard game utilities."})
-createMiniBtn = nil -- Cleanup local
 local function createMiscBtn(parent, text, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.95, 0, 0, 40)
@@ -632,9 +589,25 @@ local function createMiscBtn(parent, text, callback)
     btn.MouseButton1Click:Connect(callback)
 end
 
+createMiscBtn(Tabs.Misc, "Reset All Bots", function()
+    getgenv().BotConfig.ResetSignal = true
+    syncConfig()
+    task.wait(1)
+    getgenv().BotConfig.ResetSignal = false
+    syncConfig()
+end)
+
+createMiscBtn(Tabs.Misc, "Bring All Bots", function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        getgenv().BotConfig.TargetCFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
+        syncConfig()
+    end
+end)
+
 createMiscBtn(Tabs.Misc, "Rejoin Server", function()
     game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
 end)
+
 createMiscBtn(Tabs.Misc, "Server Hop", function()
     local Http = game:GetService("HttpService")
     local TPS = game:GetService("TeleportService")
@@ -647,7 +620,6 @@ createMiscBtn(Tabs.Misc, "Server Hop", function()
     end
 end)
 
-Tabs.Settings:AddParagraph({Title = "Performance", Content = "Broadcast settings to alts."})
 createToggle(Tabs.Settings, "Broadcast Anti-White Screen", true, function(v) getgenv().BotConfig.AntiWhiteScreen = v; syncConfig() end)
 
 local dragStart, startPos, dragging
