@@ -231,7 +231,7 @@ local function createMiniBtn(text, callback)
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 10
-    btn.AutoButtonColor = true
+    btn.AutoButtonColor = false
     btn.Parent = ActionButtons
     
     local c = Instance.new("UICorner")
@@ -239,9 +239,19 @@ local function createMiniBtn(text, callback)
     c.Parent = btn
     
     local s = Instance.new("UIStroke")
-    s.Color = Color3.fromRGB(40, 40, 40)
+    s.Color = Color3.fromRGB(0, 200, 255)
     s.Thickness = 1
+    s.Transparency = 1
     s.Parent = btn
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
+    end)
     
     btn.MouseButton1Click:Connect(callback or function() end)
     return btn
@@ -331,11 +341,27 @@ local function createPopupBtn(parent, text, color, callback)
     btn.TextColor3 = color or Color3.new(1, 1, 1)
     btn.Font = Enum.Font.GothamMedium
     btn.TextSize = 12
+    btn.AutoButtonColor = false
     btn.Parent = parent
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
+    
+    local s = Instance.new("UIStroke")
+    s.Color = color or Color3.fromRGB(0, 200, 255)
+    s.Thickness = 1.5
+    s.Transparency = 1
+    s.Parent = btn
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
+    end)
     
     btn.MouseButton1Click:Connect(callback)
     return btn
@@ -703,177 +729,91 @@ createSidebarBtn("Buyers", "10734897102")
 createSidebarBtn("Stats", "10723398439")
 createSidebarBtn("Misc", "10723351910")
 createSidebarBtn("Settings", "10723374431")
+-- Topbar Controls
+local Topbar = Instance.new("Frame")
+Topbar.Size = UDim2.new(1, -40, 0, 40)
+Topbar.Position = UDim2.new(0, 20, 0, 80)
+Topbar.BackgroundTransparency = 1
+Topbar.Parent = Tabs.Alts
 
--- Quick Hub (On-Screen Control)
-local QuickHub = Instance.new("Frame")
-QuickHub.Name = "QuickHub"
-QuickHub.Size = UDim2.new(0, 160, 0, 160)
-QuickHub.Position = UDim2.new(1, -180, 0.6, 0)
-QuickHub.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-QuickHub.BackgroundTransparency = 0.3
-QuickHub.BorderSizePixel = 0
-QuickHub.ZIndex = 50
-QuickHub.Parent = ScreenGui
+local tbGrid = Instance.new("UIGridLayout")
+tbGrid.CellSize = UDim2.new(0.23, 0, 0, 30)
+tbGrid.CellPadding = UDim2.new(0.02, 0, 0, 5)
+tbGrid.Parent = Topbar
 
-local QhCorner = Instance.new("UICorner")
-QhCorner.CornerRadius = UDim.new(0, 10)
-QhCorner.Parent = QuickHub
-
-local QhStroke = Instance.new("UIStroke")
-QhStroke.Color = Color3.fromRGB(0, 120, 255)
-QhStroke.Thickness = 1.5
-QhStroke.Transparency = 0.5
-QhStroke.Parent = QuickHub
-
-local QhGlow = Instance.new("ImageLabel")
-QhGlow.Size = UDim2.new(1, 40, 1, 40)
-QhGlow.Position = UDim2.new(0.5, 0, 0.5, 0)
-QhGlow.AnchorPoint = Vector2.new(0.5, 0.5)
-QhGlow.BackgroundTransparency = 1
-QhGlow.Image = "rbxassetid://4975687002"
-QhGlow.ImageColor3 = Color3.fromRGB(0, 120, 255)
-QhGlow.ImageTransparency = 0.7
-QhGlow.ZIndex = 49
-QhGlow.Parent = QuickHub
-
-local QhTitle = Instance.new("TextLabel")
-QhTitle.Size = UDim2.new(1, 0, 0, 25)
-QhTitle.BackgroundTransparency = 1
-QhTitle.Text = "QUICK HUB"
-QhTitle.TextColor3 = Color3.new(1, 1, 1)
-QhTitle.Font = Enum.Font.GothamBold
-QhTitle.TextSize = 10
-QhTitle.Parent = QuickHub
-
-local QhContent = Instance.new("Frame")
-QhContent.Size = UDim2.new(1, -10, 1, -80)
-QhContent.Position = UDim2.new(0, 5, 0, 75)
-QhContent.BackgroundTransparency = 1
-QhContent.Parent = QuickHub
-
-local QhStats = Instance.new("TextLabel")
-QhStats.Size = UDim2.new(1, 0, 0, 30)
-QhStats.Position = UDim2.new(0, 0, 0, 20)
-QhStats.BackgroundTransparency = 1
-QhStats.Text = "Bots: 0 | Cash: $0\nDrop: $15,000"
-QhStats.TextColor3 = Color3.fromRGB(200, 200, 200)
-QhStats.Font = Enum.Font.GothamMedium
-QhStats.TextSize = 9
-QhStats.Parent = QuickHub
-
-task.spawn(function()
-    while task.wait(0.5) do
-        local botCount = 0
-        local totalCash = 0
-        if isfolder and listfiles then
-            pcall(function()
-                local files = listfiles("")
-                for _, f in pairs(files) do
-                    if f:match("status_.*%.json") then
-                        local content = readfile(f)
-                        local data = HttpService:JSONDecode(content)
-                        if os.time() - data.LastUpdate < 15 then
-                            botCount = botCount + 1
-                            totalCash = totalCash + (data.Cash or 0)
-                        end
-                    end
-                end
-            end)
-        end
-        QhStats.Text = string.format("Bots: %d | Cash: $%s", botCount, tostring(totalCash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""))
-    end
-end)
-
-local QhList = Instance.new("UIListLayout")
-QhList.Padding = UDim.new(0, 5)
-QhList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-QhList.Parent = QhContent
-
-local function createQuickToggle(text, property, default)
+local function createTopBtn(text, color, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 28)
-    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    btn.Text = " " .. text
-    btn.TextColor3 = default and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(150, 150, 150)
-    btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 10
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Parent = QhContent
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 4)
-    c.Parent = btn
-    
-    local s = Instance.new("UIStroke")
-    s.Color = Color3.fromRGB(0, 120, 255)
-    s.Thickness = 1
-    s.Transparency = default and 0.5 or 1
-    s.Parent = btn
-
-    local state = default
-    btn.MouseButton1Click:Connect(function()
-        state = not state
-        getgenv().BotConfig[property] = state
-        syncConfig()
-        TweenService:Create(btn, TweenInfo.new(0.2), {TextColor3 = state and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(150, 150, 150)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = state and 0.5 or 1}):Play()
-    end)
-end
-
-local function createQuickBtn(text, color, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 28)
     btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
     btn.Text = text
     btn.TextColor3 = color or Color3.new(1, 1, 1)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 10
-    btn.Parent = QhContent
+    btn.AutoButtonColor = false
+    btn.Parent = Topbar
     
     local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 4)
+    c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
+    
+    local s = Instance.new("UIStroke")
+    s.Color = color or Color3.fromRGB(0, 200, 255)
+    s.Thickness = 1.5
+    s.Transparency = 1
+    s.Parent = btn
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0.5}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
+    end)
     
     btn.MouseButton1Click:Connect(callback)
 end
 
-createQuickToggle("FOLLOW OWNER", "FollowOwner", false)
-createQuickToggle("AUTO DROP", "AutoDrop", false)
-createQuickBtn("TP VAULT", Color3.fromRGB(0, 120, 255), function()
+createTopBtn("TP CLUB", Color3.fromRGB(0, 120, 255), function()
+    getgenv().BotConfig.TargetCFrame = CFrame.new(-266.1, -2.2, -367.2)
+    syncConfig()
+end)
+createTopBtn("TP VAULT", Color3.fromRGB(0, 120, 255), function()
     getgenv().BotConfig.TargetCFrame = CFrame.new(-38.3, -29.3, -283.4)
     syncConfig()
 end)
-createQuickBtn("RESET ALL", Color3.fromRGB(255, 80, 80), function()
-    getgenv().BotConfig.ResetSignal = true
-    syncConfig()
-    task.wait(1)
-    getgenv().BotConfig.ResetSignal = false
-    syncConfig()
+createTopBtn("CASH COUNTER", Color3.new(1, 1, 1), function()
+    createPopup("Total Cash Indicator", function(c)
+        local l = Instance.new("TextLabel")
+        l.Size = UDim2.new(1, 0, 1, 0)
+        l.BackgroundTransparency = 1
+        l.Text = "Calculating network total..."
+        l.TextColor3 = Color3.new(1, 1, 1)
+        l.Font = Enum.Font.GothamBold
+        l.TextSize = 18
+        l.Parent = c
+        
+        task.spawn(function()
+            while task.wait(3) do
+                local total = 0
+                if listfiles then
+                    for _, f in pairs(listfiles("")) do
+                        if f:match("status_.*%.json") then
+                            local data = HttpService:JSONDecode(readfile(f))
+                            if os.time() - data.LastUpdate < 15 then
+                                total = total + (data.Cash or 0)
+                            end
+                        end
+                    end
+                end
+                l.Text = "TOTAL CASH: $" .. tostring(total):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+            end
+        end)
+    end)
+end)
+createTopBtn("UTIL PANEL", Color3.new(1, 1, 1), function()
+    showPage("Misc")
 end)
 
--- Draggable implementation for Quick Hub
-local dragging, dragInput, dragStart, startPos
-QuickHub.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = QuickHub.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
-    end
-end)
-QuickHub.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        QuickHub.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
 
 showPage("Alts")
 
@@ -1030,6 +970,7 @@ for name, cf in pairs(SetupTPs) do
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 10
+    btn.AutoButtonColor = false
     btn.Parent = QuickSetup
     
     local c = Instance.new("UICorner")
@@ -1037,10 +978,19 @@ for name, cf in pairs(SetupTPs) do
     c.Parent = btn
     
     local s = Instance.new("UIStroke")
-    s.Color = Color3.fromRGB(0, 120, 255)
-    s.Thickness = 1
-    s.Transparency = 0.8
+    s.Color = Color3.fromRGB(0, 200, 255)
+    s.Thickness = 1.5
+    s.Transparency = 1
     s.Parent = btn
+    
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
+        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
+    end)
     
     btn.MouseButton1Click:Connect(function()
         getgenv().BotConfig.TargetCFrame = cf
