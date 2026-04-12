@@ -10,7 +10,13 @@ getgenv().BotConfig = {
     AutoDrop = false,
     FollowOwner = false,
     DropAmount = 15000,
-    AntiWhiteScreen = true
+    AntiWhiteScreen = true,
+    WalkSpeed = 16,
+    JumpPower = 50,
+    FlySpeed = 50,
+    FlyEnabled = false,
+    ESPEnabled = false,
+    WhitelistedBuyers = {}
 }
 
 local function syncConfig()
@@ -177,8 +183,113 @@ createMiniBtn("TP Vault", function()
     getgenv().BotConfig.TargetCFrame = CFrame.new(-38.3, -29.3, -283.4)
     syncConfig()
 end)
-createMiniBtn("Cash Counter")
-createMiniBtn("Account Util")
+local function createPopup(title, size)
+    local popupFrame = Instance.new("Frame")
+    popupFrame.Size = size or UDim2.new(0, 300, 0, 250)
+    popupFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    popupFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    popupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    popupFrame.ZIndex = 10
+    popupFrame.Visible = false
+    popupFrame.Parent = ScreenGui
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 12)
+    c.Parent = popupFrame
+    
+    local s = Instance.new("UIStroke")
+    s.Color = Color3.fromRGB(40, 40, 40)
+    s.Thickness = 1
+    s.Parent = popupFrame
+
+    local top = Instance.new("Frame")
+    top.Size = UDim2.new(1, 0, 0, 35)
+    top.BackgroundTransparency = 1
+    top.Parent = popupFrame
+    
+    local t = Instance.new("TextLabel")
+    t.Size = UDim2.new(1, -40, 1, 0)
+    t.Position = UDim2.new(0, 15, 0, 0)
+    t.BackgroundTransparency = 1
+    t.Text = title
+    t.TextColor3 = Color3.new(1, 1, 1)
+    t.Font = Enum.Font.GothamBold
+    t.TextSize = 14
+    t.TextXAlignment = Enum.TextXAlignment.Left
+    t.Parent = top
+    
+    local close = Instance.new("TextButton")
+    close.Size = UDim2.new(0, 25, 0, 25)
+    close.Position = UDim2.new(1, -30, 0.5, 0)
+    close.AnchorPoint = Vector2.new(0, 0.5)
+    close.BackgroundTransparency = 1
+    close.Text = "×"
+    close.TextColor3 = Color3.fromRGB(200, 200, 200)
+    close.Font = Enum.Font.GothamBold
+    close.TextSize = 20
+    close.Parent = top
+    
+    close.MouseButton1Click:Connect(function() popupFrame.Visible = false end)
+    
+    local content = Instance.new("ScrollingFrame")
+    content.Size = UDim2.new(1, -20, 1, -45)
+    content.Position = UDim2.new(0, 10, 0, 40)
+    content.BackgroundTransparency = 1
+    content.BorderSizePixel = 0
+    content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    content.CanvasSize = UDim2.new(0, 0, 0, 0)
+    content.ScrollBarThickness = 2
+    content.Parent = popupFrame
+    
+    local list = Instance.new("UIListLayout")
+    list.Padding = UDim.new(0, 8)
+    list.Parent = content
+    
+    return popupFrame, content
+end
+
+local CashPopup, CashContent = createPopup("Detailed Cash Breakdown")
+local UtilPopup, UtilContent = createPopup("Account Utilities")
+
+local function createPopupBtn(parent, text, color, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    btn.Text = text
+    btn.TextColor3 = color or Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextSize = 12
+    btn.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = btn
+    
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+createPopupBtn(UtilContent, "Reset All Bots", Color3.fromRGB(255, 100, 100), function()
+    getgenv().BotConfig.ResetSignal = true
+    syncConfig()
+    task.wait(1)
+    getgenv().BotConfig.ResetSignal = false
+    syncConfig()
+end)
+
+createPopupBtn(UtilContent, "Rejoin All", Color3.fromRGB(100, 255, 100), function()
+    -- Bots will read config and rejoin if they see a rejoin signal (to be implemented in bot script)
+    getgenv().BotConfig.RejoinSignal = os.time()
+    syncConfig()
+end)
+
+createPopupBtn(UtilContent, "Refresh Avatars", Color3.new(1, 1, 1), function()
+    getgenv().BotConfig.RefreshAvatarSignal = os.time()
+    syncConfig()
+end)
+
+createMiniBtn("Cash Counter", function() CashPopup.Visible = not CashPopup.Visible end)
+createMiniBtn("Account Util", function() UtilPopup.Visible = not UtilPopup.Visible end)
 
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 140, 1, -85)
@@ -210,6 +321,14 @@ Pages.ZIndex = 2
 Pages.Parent = MainFrame
 
 local function createPage(name)
+    local pageContainer = Instance.new("CanvasGroup")
+    pageContainer.Name = name .. "PageContainer"
+    pageContainer.Size = UDim2.new(1, 0, 1, 0)
+    pageContainer.BackgroundTransparency = 1
+    pageContainer.GroupTransparency = 1
+    pageContainer.Visible = false
+    pageContainer.Parent = Pages
+
     local page = Instance.new("ScrollingFrame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -218,28 +337,46 @@ local function createPage(name)
     page.CanvasSize = UDim2.new(0, 0, 0, 0)
     page.AutomaticCanvasSize = Enum.AutomaticSize.Y
     page.ScrollBarThickness = 2
-    page.Visible = false
-    page.Parent = Pages
+    page.Parent = pageContainer
     
     local list = Instance.new("UIListLayout")
     list.Padding = UDim.new(0, 10)
     list.Parent = page
     
-    return page
+    return pageContainer, page
 end
 
-local Tabs = {
-    Alts = createPage("Alts"),
-    Buyers = createPage("Buyers"),
-    Player = createPage("Player"),
-    Stats = createPage("Stats"),
-    Misc = createPage("Misc"),
-    Settings = createPage("Settings")
-}
+local Tabs = {}
+local TabContainers = {}
+
+local function addTab(name)
+    local container, page = createPage(name)
+    Tabs[name] = page
+    TabContainers[name] = container
+end
+
+addTab("Alts")
+addTab("Buyers")
+addTab("Player")
+addTab("Stats")
+addTab("Misc")
+addTab("Settings")
 
 local function showPage(name)
-    for _, p in pairs(Tabs) do p.Visible = false end
-    if Tabs[name] then Tabs[name].Visible = true end
+    for n, container in pairs(TabContainers) do
+        if n == name then
+            container.Visible = true
+            TweenService:Create(container, TweenInfo.new(0.4), {GroupTransparency = 0}):Play()
+        else
+            task.spawn(function()
+                TweenService:Create(container, TweenInfo.new(0.4), {GroupTransparency = 1}):Play()
+                task.wait(0.4)
+                if container.GroupTransparency == 1 then
+                    container.Visible = false
+                end
+            end)
+        end
+    end
 end
 
 local StatsRow = Instance.new("Frame")
@@ -503,7 +640,7 @@ local function createToggle(parent, text, default, callback)
     end)
 end
 
-local function createSlider(parent, text, min, max, default, callback)
+local function createInput(parent, text, min, max, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0.95, 0, 0, 60)
     frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
@@ -517,62 +654,256 @@ local function createSlider(parent, text, min, max, default, callback)
     label.Size = UDim2.new(1, -20, 0, 25)
     label.Position = UDim2.new(0, 15, 0, 5)
     label.BackgroundTransparency = 1
-    label.Text = text .. ": " .. default
+    label.Text = text
     label.TextColor3 = Color3.new(1, 1, 1)
     label.Font = Enum.Font.GothamMedium
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
     
-    local bar = Instance.new("Frame")
-    bar.Size = UDim2.new(1, -30, 0, 6)
-    bar.Position = UDim2.new(0, 15, 0, 40)
-    bar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    bar.Parent = frame
+    local input = Instance.new("TextBox")
+    input.Size = UDim2.new(1, -30, 0, 24)
+    input.Position = UDim2.new(0, 15, 0, 32)
+    input.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    input.Text = tostring(default)
+    input.PlaceholderText = "Enter amount..."
+    input.TextColor3 = Color3.new(1, 1, 1)
+    input.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+    input.Font = Enum.Font.GothamMedium
+    input.TextSize = 13
+    input.ClipsDescendants = true
+    input.Parent = frame
     
-    local bc = Instance.new("UICorner")
-    bc.CornerRadius = UDim.new(1, 0)
-    bc.Parent = bar
+    local ic = Instance.new("UICorner")
+    ic.CornerRadius = UDim.new(0, 6)
+    ic.Parent = input
     
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-    fill.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
-    fill.BorderSizePixel = 0
-    fill.Parent = bar
+    local is = Instance.new("UIStroke")
+    is.Color = Color3.fromRGB(40, 40, 40)
+    is.Thickness = 1
+    is.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    is.Parent = input
+
+    input.Focused:Connect(function()
+        TweenService:Create(is, TweenInfo.new(0.2), {Color = Color3.fromRGB(0, 100, 255)}):Play()
+    end)
     
-    local fc = Instance.new("UICorner")
-    fc.CornerRadius = UDim.new(1, 0)
-    fc.Parent = fill
-    
-    local function update(input)
-        local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-        fill.Size = UDim2.new(pos, 0, 1, 0)
-        local val = math.floor(min + (max - min) * pos)
-        label.Text = text .. ": " .. val
-        callback(val)
-    end
-    
-    bar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            update(input)
-            local move; move = UserInputService.InputChanged:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseMovement then
-                    update(input)
-                end
-            end)
-            local release; release = UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    move:Disconnect()
-                    release:Disconnect()
-                end
-            end)
+    input.FocusLost:Connect(function()
+        TweenService:Create(is, TweenInfo.new(0.2), {Color = Color3.fromRGB(40, 40, 40)}):Play()
+        local val = tonumber(input.Text)
+        if val then
+            val = math.clamp(val, min, max)
+            input.Text = tostring(val)
+            callback(val)
+        else
+            input.Text = tostring(default)
+            callback(default)
         end
     end)
 end
 
 createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig() end)
 createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig() end)
-createSlider(Tabs.Alts, "Drop Amount", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
+createInput(Tabs.Alts, "Drop Amount", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
+
+-- Player Tab Content
+createToggle(Tabs.Player, "Fly Enabled", false, function(v) getgenv().BotConfig.FlyEnabled = v; syncConfig() end)
+createInput(Tabs.Player, "Fly Speed", 5, 500, 50, function(v) getgenv().BotConfig.FlySpeed = v; syncConfig() end)
+createToggle(Tabs.Player, "ESP Enabled", false, function(v) getgenv().BotConfig.ESPEnabled = v; syncConfig() end)
+createInput(Tabs.Player, "WalkSpeed", 16, 200, 16, function(v) getgenv().BotConfig.WalkSpeed = v; syncConfig() end)
+createInput(Tabs.Player, "JumpPower", 50, 300, 50, function(v) getgenv().BotConfig.JumpPower = v; syncConfig() end)
+
+-- Buyers Tab Content
+local function updateBuyerList()
+    for _, child in pairs(Tabs.Buyers:GetChildren()) do
+        if child:IsA("Frame") and child.Name == "BuyerEntry" then
+            child:Destroy()
+        end
+    end
+    
+    for i, username in ipairs(getgenv().BotConfig.WhitelistedBuyers) do
+        local entry = Instance.new("Frame")
+        entry.Name = "BuyerEntry"
+        entry.Size = UDim2.new(0.95, 0, 0, 35)
+        entry.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        entry.Parent = Tabs.Buyers
+        
+        local ec = Instance.new("UICorner")
+        ec.CornerRadius = UDim.new(0, 6)
+        ec.Parent = entry
+        
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, -50, 1, 0)
+        label.Position = UDim2.new(0, 12, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = username
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.Font = Enum.Font.GothamMedium
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = entry
+        
+        local del = Instance.new("TextButton")
+        del.Size = UDim2.new(0, 30, 0, 25)
+        del.Position = UDim2.new(1, -35, 0.5, 0)
+        del.AnchorPoint = Vector2.new(0, 0.5)
+        del.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        del.Text = "X"
+        del.TextColor3 = Color3.new(1, 1, 1)
+        del.Font = Enum.Font.GothamBold
+        del.TextSize = 12
+        del.Parent = entry
+        
+        local dc = Instance.new("UICorner")
+        dc.CornerRadius = UDim.new(0, 4)
+        dc.Parent = del
+        
+        del.MouseButton1Click:Connect(function()
+            table.remove(getgenv().BotConfig.WhitelistedBuyers, i)
+            syncConfig()
+            updateBuyerList()
+        end)
+    end
+end
+
+local addBuyerFrame = Instance.new("Frame")
+addBuyerFrame.Size = UDim2.new(0.95, 0, 0, 50)
+addBuyerFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+addBuyerFrame.Parent = Tabs.Buyers
+
+local abc = Instance.new("UICorner")
+abc.CornerRadius = UDim.new(0, 8)
+abc.Parent = addBuyerFrame
+
+local buyerInput = Instance.new("TextBox")
+buyerInput.Size = UDim2.new(1, -80, 0, 30)
+buyerInput.Position = UDim2.new(0, 10, 0.5, 0)
+buyerInput.AnchorPoint = Vector2.new(0, 0.5)
+buyerInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+buyerInput.PlaceholderText = "Type username..."
+buyerInput.Text = ""
+buyerInput.TextColor3 = Color3.new(1, 1, 1)
+buyerInput.Font = Enum.Font.GothamMedium
+buyerInput.TextSize = 12
+buyerInput.Parent = addBuyerFrame
+
+local addBtn = Instance.new("TextButton")
+addBtn.Size = UDim2.new(0, 60, 0, 30)
+addBtn.Position = UDim2.new(1, -70, 0.5, 0)
+addBtn.AnchorPoint = Vector2.new(0, 0.5)
+addBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+addBtn.Text = "Add"
+addBtn.TextColor3 = Color3.new(1, 1, 1)
+addBtn.Font = Enum.Font.GothamBold
+addBtn.TextSize = 12
+addBtn.Parent = addBuyerFrame
+
+local abtc = Instance.new("UICorner")
+abtc.CornerRadius = UDim.new(0, 6)
+abtc.Parent = addBtn
+
+addBtn.MouseButton1Click:Connect(function()
+    if buyerInput.Text ~= "" then
+        table.insert(getgenv().BotConfig.WhitelistedBuyers, buyerInput.Text)
+        buyerInput.Text = ""
+        syncConfig()
+        updateBuyerList()
+    end
+end)
+
+updateBuyerList()
+
+-- Stats Tab Content
+local StatsList = Instance.new("ScrollingFrame")
+StatsList.Size = UDim2.new(1, 0, 1, 0)
+StatsList.BackgroundTransparency = 1
+StatsList.BorderSizePixel = 0
+StatsList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+StatsList.CanvasSize = UDim2.new(0, 0, 0, 0)
+StatsList.ScrollBarThickness = 2
+StatsList.Parent = Tabs.Stats
+
+local slist = Instance.new("UIListLayout")
+slist.Padding = UDim.new(0, 5)
+slist.Parent = StatsList
+
+task.spawn(function()
+    while task.wait(3) do
+        if isfolder and listfiles then
+            pcall(function()
+                StatsList:ClearAllChildren()
+                CashContent:ClearAllChildren()
+                local l = Instance.new("UIListLayout")
+                l.Padding = UDim.new(0, 5)
+                l.Parent = StatsList
+                
+                local cl = Instance.new("UIListLayout")
+                cl.Padding = UDim.new(0, 8)
+                cl.Parent = CashContent
+                
+                local files = listfiles("")
+                for _, f in pairs(files) do
+                    if f:match("status_.*%.json") then
+                        local content = readfile(f)
+                        local data = HttpService:JSONDecode(content)
+                        if os.time() - data.LastUpdate < 15 then 
+                            local row = Instance.new("Frame")
+                            row.Size = UDim2.new(0.98, 0, 0, 30)
+                            row.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                            row.Parent = StatsList
+                            
+                            local rc = Instance.new("UICorner")
+                            rc.CornerRadius = UDim.new(0, 4)
+                            rc.Parent = row
+                            
+                            local n = Instance.new("TextLabel")
+                            n.Size = UDim2.new(0.4, 0, 1, 0)
+                            n.Position = UDim2.new(0, 10, 0, 0)
+                            n.BackgroundTransparency = 1
+                            n.Text = data.Name
+                            n.TextColor3 = Color3.new(1, 1, 1)
+                            n.Font = Enum.Font.GothamMedium
+                            n.TextSize = 11
+                            n.TextXAlignment = Enum.TextXAlignment.Left
+                            n.Parent = row
+                            
+                            local c = Instance.new("TextLabel")
+                            c.Size = UDim2.new(0.3, 0, 1, 0)
+                            c.Position = UDim2.new(0.4, 0, 0, 0)
+                            c.BackgroundTransparency = 1
+                            c.Text = "$" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+                            c.TextColor3 = Color3.fromRGB(0, 255, 100)
+                            c.Font = Enum.Font.GothamBold
+                            c.TextSize = 11
+                            c.Parent = row
+                            
+                            local s = Instance.new("TextLabel")
+                            s.Size = UDim2.new(0.3, 0, 1, 0)
+                            s.Position = UDim2.new(0.7, 0, 0, 0)
+                            s.BackgroundTransparency = 1
+                            s.Text = data.Status
+                            s.TextColor3 = data.Status == "Farming" and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(150, 150, 150)
+                            s.Font = Enum.Font.GothamMedium
+                            s.TextSize = 10
+                            s.Parent = row
+                            
+                            -- Add to Cash Popup too
+                            local crow = Instance.new("TextLabel")
+                            crow.Size = UDim2.new(1, 0, 0, 20)
+                            crow.BackgroundTransparency = 1
+                            crow.Text = data.Name .. ": $" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+                            crow.TextColor3 = Color3.fromRGB(200, 200, 200)
+                            crow.Font = Enum.Font.Gotham
+                            crow.TextSize = 12
+                            crow.Parent = CashContent
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
 
 local function createMiscBtn(parent, text, callback)
     local btn = Instance.new("TextButton")
