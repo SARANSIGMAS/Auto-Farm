@@ -74,6 +74,30 @@ MainFrame.BorderSizePixel = 0
 MainFrame.ZIndex = 2
 MainFrame.Parent = ScreenGui
 
+local DropShadow = Instance.new("ImageLabel")
+DropShadow.Name = "DropShadow"
+DropShadow.Size = UDim2.new(1, 40, 1, 40)
+DropShadow.Position = UDim2.new(0.5, 0, 0.5, 4)
+DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
+DropShadow.BackgroundTransparency = 1
+DropShadow.Image = "rbxassetid://4743306782"
+DropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+DropShadow.ImageTransparency = 0.4
+DropShadow.ScaleType = Enum.ScaleType.Slice
+DropShadow.SliceCenter = Rect.new(35, 35, 35, 35)
+DropShadow.ZIndex = 1
+DropShadow.Parent = MainFrame
+
+-- Optional trick to make it render cleanly behind the frame
+local ShadowFixer = Instance.new("CanvasGroup")
+ShadowFixer.Size = UDim2.new(1,0,1,0)
+ShadowFixer.BackgroundTransparency = 1
+ShadowFixer.ZIndex = 2
+ShadowFixer.Parent = ScreenGui 
+-- Re-parenting for proper drag tracking while rendering behind
+DropShadow.Parent = MainFrame
+DropShadow.ZIndex = 0
+
 local MainBlur = Instance.new("Frame")
 MainBlur.Name = "GlassLayer"
 MainBlur.Size = UDim2.new(1, 0, 1, 0)
@@ -222,182 +246,6 @@ task.spawn(function()
     end
 end)
 
-local ActionButtons = Instance.new("Frame")
-ActionButtons.Size = UDim2.new(0, 240, 0, 40)
-ActionButtons.Position = UDim2.new(1, -245, 0, 10)
-ActionButtons.BackgroundTransparency = 1
-ActionButtons.Parent = Topbar
-
-local ActionLayout = Instance.new("UIGridLayout")
-ActionLayout.CellSize = UDim2.new(0, 115, 0, 18)
-ActionLayout.CellPadding = UDim2.new(0, 5, 0, 4)
-ActionLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-ActionLayout.Parent = ActionButtons
-
-local function createMiniBtn(text, callback)
-    local btn = Instance.new("TextButton")
-    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 10
-    btn.AutoButtonColor = false
-    btn.Parent = ActionButtons
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 4)
-    c.Parent = btn
-    
-    local s = Instance.new("UIStroke")
-    s.Color = Color3.fromRGB(0, 200, 255)
-    s.Thickness = 1
-    s.Transparency = 1
-    s.Parent = btn
-    
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
-    end)
-    
-    btn.MouseButton1Click:Connect(callback or function() end)
-    return btn
-end
-
-createMiniBtn("TP Club", function() 
-    getgenv().BotConfig.TargetCFrame = CFrame.new(-266.1, -2.2, -367.2)
-    syncConfig()
-end)
-createMiniBtn("TP Vault", function() 
-    getgenv().BotConfig.TargetCFrame = CFrame.new(-38.3, -29.3, -283.4)
-    syncConfig()
-end)
-local function createPopup(title, size)
-    local popupFrame = Instance.new("Frame")
-    popupFrame.Size = size or UDim2.new(0, 300, 0, 250)
-    popupFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    popupFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-    popupFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-    popupFrame.ZIndex = 10
-    popupFrame.Visible = false
-    popupFrame.Parent = ScreenGui
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 12)
-    c.Parent = popupFrame
-    
-    local s = Instance.new("UIStroke")
-    s.Color = Color3.fromRGB(40, 40, 40)
-    s.Thickness = 1
-    s.Parent = popupFrame
-
-    local top = Instance.new("Frame")
-    top.Size = UDim2.new(1, 0, 0, 35)
-    top.BackgroundTransparency = 1
-    top.Parent = popupFrame
-    
-    local t = Instance.new("TextLabel")
-    t.Size = UDim2.new(1, -40, 1, 0)
-    t.Position = UDim2.new(0, 15, 0, 0)
-    t.BackgroundTransparency = 1
-    t.Text = title
-    t.TextColor3 = Color3.new(1, 1, 1)
-    t.Font = Enum.Font.GothamBold
-    t.TextSize = 14
-    t.TextXAlignment = Enum.TextXAlignment.Left
-    t.Parent = top
-    
-    local close = Instance.new("TextButton")
-    close.Size = UDim2.new(0, 25, 0, 25)
-    close.Position = UDim2.new(1, -30, 0.5, 0)
-    close.AnchorPoint = Vector2.new(0, 0.5)
-    close.BackgroundTransparency = 1
-    close.Text = "×"
-    close.TextColor3 = Color3.fromRGB(200, 200, 200)
-    close.Font = Enum.Font.GothamBold
-    close.TextSize = 20
-    close.Parent = top
-    
-    close.MouseButton1Click:Connect(function() popupFrame.Visible = false end)
-    
-    local content = Instance.new("ScrollingFrame")
-    content.Size = UDim2.new(1, -20, 1, -45)
-    content.Position = UDim2.new(0, 10, 0, 40)
-    content.BackgroundTransparency = 1
-    content.BorderSizePixel = 0
-    content.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    content.CanvasSize = UDim2.new(0, 0, 0, 0)
-    content.ScrollBarThickness = 2
-    content.Parent = popupFrame
-    
-    local list = Instance.new("UIListLayout")
-    list.Padding = UDim.new(0, 8)
-    list.Parent = content
-    
-    return popupFrame, content
-end
-
-local CashPopup, CashContent = createPopup("Detailed Cash Breakdown")
-local UtilPopup, UtilContent = createPopup("Account Utilities")
-
-local function createPopupBtn(parent, text, color, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 35)
-    btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-    btn.Text = text
-    btn.TextColor3 = color or Color3.new(1, 1, 1)
-    btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 12
-    btn.AutoButtonColor = false
-    btn.Parent = parent
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = btn
-    
-    local s = Instance.new("UIStroke")
-    s.Color = color or Color3.fromRGB(0, 200, 255)
-    s.Thickness = 1.5
-    s.Transparency = 1
-    s.Parent = btn
-    
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
-    end)
-    
-    btn.MouseButton1Click:Connect(callback)
-    return btn
-end
-
-createPopupBtn(UtilContent, "Reset All Bots", Color3.fromRGB(255, 100, 100), function()
-    getgenv().BotConfig.ResetSignal = true
-    syncConfig()
-    task.wait(1)
-    getgenv().BotConfig.ResetSignal = false
-    syncConfig()
-end)
-
-createPopupBtn(UtilContent, "Rejoin All", Color3.fromRGB(100, 255, 100), function()
-    -- Bots will read config and rejoin if they see a rejoin signal (to be implemented in bot script)
-    getgenv().BotConfig.RejoinSignal = os.time()
-    syncConfig()
-end)
-
-createPopupBtn(UtilContent, "Refresh Avatars", Color3.new(1, 1, 1), function()
-    getgenv().BotConfig.RefreshAvatarSignal = os.time()
-    syncConfig()
-end)
-
-createMiniBtn("Cash Counter", function() CashPopup.Visible = not CashPopup.Visible end)
-createMiniBtn("Account Util", function() UtilPopup.Visible = not UtilPopup.Visible end)
 
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 140, 1, -66)
@@ -609,10 +457,14 @@ local function addBotCard(data)
     
     local cash = Instance.new("TextLabel")
     cash.Position = UDim2.new(0, 56, 0, 27)
-    cash.Size = UDim2.new(0.4, 0, 0, 14)
+    cash.Size = UDim2.new(0.8, 0, 0, 14)
     cash.BackgroundTransparency = 1
-    cash.Text = "$" .. tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
-    cash.TextColor3 = Color3.fromRGB(0, 255, 100)
+    cash.RichText = true
+    cash.Text = string.format("$%s  <font color=\"#B666FF\">$%s</font>", 
+        tostring(data.Cash):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", ""),
+        tostring(data.BankCash or 0):reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+    )
+    cash.TextColor3 = Color3.new(1, 1, 1)
     cash.Font = Enum.Font.GothamBold
     cash.TextSize = 11
     cash.TextXAlignment = Enum.TextXAlignment.Left
@@ -646,9 +498,9 @@ local function addBotCard(data)
     badge.Size = UDim2.new(0, 60, 0, 20)
     badge.Position = UDim2.new(1, -70, 0.5, 0)
     badge.AnchorPoint = Vector2.new(0, 0.5)
-    badge.BackgroundColor3 = data.Status == "Farming" and Color3.fromRGB(0, 40, 20) or Color3.fromRGB(30, 30, 30)
+    badge.BackgroundColor3 = data.Status == "Dropping" and Color3.fromRGB(0, 40, 20) or Color3.fromRGB(30, 30, 30)
     badge.Text = data.Status
-    badge.TextColor3 = data.Status == "Farming" and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(120, 120, 120)
+    badge.TextColor3 = data.Status == "Dropping" and Color3.fromRGB(0, 255, 120) or Color3.fromRGB(120, 120, 120)
     badge.Font = Enum.Font.GothamBold
     badge.TextSize = 9
     badge.Parent = card
@@ -678,7 +530,7 @@ task.spawn(function()
                         local data = HttpService:JSONDecode(content)
                         if os.time() - data.LastUpdate < 15 then 
                             onlineCount = onlineCount + 1
-                            if data.Status == "Farming" then
+                            if data.Status == "Dropping" then
                                 droppingCount = droppingCount + 1
                             end
                             totalCash = totalCash + data.Cash
@@ -1038,7 +890,7 @@ end
 createToggle(Tabs.Alts, "Auto Drop Money", false, function(v) getgenv().BotConfig.AutoDrop = v; syncConfig() end)
 createToggle(Tabs.Alts, "Follow Owner", false, function(v) getgenv().BotConfig.FollowOwner = v; syncConfig() end)
 createToggle(Tabs.Alts, "Auto Reset if KO'd", true, function(v) getgenv().BotConfig.AutoResetKO = v; syncConfig() end)
-createInput(Tabs.Alts, "Drop Amount (e.g. 10k, 1m)", 500, 50000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
+createInput(Tabs.Alts, "Drop Amount (Max 15k)", 1, 15000, 15000, function(v) getgenv().BotConfig.DropAmount = v; syncConfig() end)
 
 local QuickSetup = Instance.new("Frame")
 QuickSetup.Size = UDim2.new(0.95, 0, 0, 80)
@@ -1080,19 +932,25 @@ for name, cf in pairs(SetupTPs) do
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
     
-    local s = Instance.new("UIStroke")
-    s.Color = Color3.fromRGB(0, 200, 255)
-    s.Thickness = 1.5
-    s.Transparency = 1
-    s.Parent = btn
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "DropShadow"
+    shadow.Size = UDim2.new(1, 14, 1, 14)
+    shadow.Position = UDim2.new(0.5, 0, 0.5, 2)
+    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://4743306782"
+    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.ImageTransparency = 0.5
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(35, 35, 35, 35)
+    shadow.ZIndex = btn.ZIndex - 1
+    shadow.Parent = btn
     
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 0}):Play()
     end)
     btn.MouseLeave:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(24, 24, 24)}):Play()
-        TweenService:Create(s, TweenInfo.new(0.2), {Transparency = 1}):Play()
     end)
     
     btn.MouseButton1Click:Connect(function()
@@ -1350,6 +1208,65 @@ end)
 
 createToggle(Tabs.Settings, "Broadcast Anti-White Screen", true, function(v) getgenv().BotConfig.AntiWhiteScreen = v; syncConfig() end)
 
+local ToggleKey = Enum.KeyCode.RightShift
+
+local function createKeybind(parent, text, defaultKey, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.95, 0, 0, 40)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    frame.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = frame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.Position = UDim2.new(0, 15, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.GothamMedium
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+    
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 80, 0, 24)
+    btn.Position = UDim2.new(1, -95, 0.5, 0)
+    btn.AnchorPoint = Vector2.new(0, 0.5)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Text = defaultKey.Name
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextSize = 11
+    btn.Parent = frame
+    
+    local bc = Instance.new("UICorner")
+    bc.CornerRadius = UDim.new(0, 6)
+    bc.Parent = btn
+    
+    local listening = false
+    btn.MouseButton1Click:Connect(function()
+        listening = true
+        btn.Text = "..."
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 100, 255)}):Play()
+    end)
+    
+    UserInputService.InputBegan:Connect(function(input, gpe)
+        if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+            listening = false
+            btn.Text = input.KeyCode.Name
+            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+            callback(input.KeyCode)
+        end
+    end)
+end
+
+createKeybind(Tabs.Settings, "Toggle GUI Keybind", ToggleKey, function(key)
+    ToggleKey = key
+end)
+
 local dragStart, startPos, dragging
 MainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1378,7 +1295,7 @@ MainScale.Parent = MainFrame
 
 local isGuiVisible = true
 UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == Enum.KeyCode.RightShift then
+    if not gpe and input.KeyCode == ToggleKey then
         isGuiVisible = not isGuiVisible
         if isGuiVisible then
             MainFrame.Visible = true
