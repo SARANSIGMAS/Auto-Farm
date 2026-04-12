@@ -5,13 +5,17 @@ local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
-local SessionStart = os.time()
-local InitialCash = 0
-task.spawn(function()
-    repeat task.wait() until LocalPlayer:FindFirstChild("DataFolder")
-    local df = LocalPlayer.DataFolder
-    InitialCash = df:FindFirstChild("Currency") and df.Currency.Value or 0
-end)
+getgenv().Kamaik_Cleanup = {}
+local function trackTask(obj) table.insert(getgenv().Kamaik_Cleanup, obj) end
+
+local function unloadScript()
+    getgenv().Kamaik_Unloaded = true
+    for _, obj in pairs(getgenv().Kamaik_Cleanup) do
+        if typeof(obj) == "RBXScriptConnection" then obj:Disconnect()
+        elseif typeof(obj) == "Instance" then obj:Destroy() end
+    end
+    getgenv().Kamaik_Cleanup = {}
+end
 
 getgenv().BotConfig = {
     OwnerUsername = LocalPlayer.Name,
@@ -20,7 +24,10 @@ getgenv().BotConfig = {
     DropAmount = 15000,
     AntiWhiteScreen = true,
     WhitelistedBuyers = {},
-    AutoResetKO = true
+    AutoResetKO = true,
+    MoneyESP = false,
+    AutoPickup = false,
+    PickupRange = 50
 }
 
 local function parseShorthand(str)
@@ -85,11 +92,12 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KamaikMaster"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+trackTask(ScreenGui)
 
 local container = (gethui and gethui()) or (game:GetService("CoreGui"):FindFirstChild("RobloxGui")) or game:GetService("CoreGui")
 ScreenGui.Parent = container
 
-local MainFrame = Instance.new("Frame")
+local MainFrame = Instance.new("CanvasGroup")
 MainFrame.Size = UDim2.new(0, 620, 0, 440)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -597,7 +605,19 @@ tpAll.MouseButton1Click:Connect(function()
     syncConfig("OwnerPos", LocalPlayer.Character and LocalPlayer.Character:GetPivot() or CFrame.new())
 end)
 
-local BotScroll = AltsScroll
+local WorkforceContainer = Instance.new("Frame")
+WorkforceContainer.Name = "WorkforceContainer"
+WorkforceContainer.Size = UDim2.new(1, 0, 0, 0)
+WorkforceContainer.AutomaticSize = Enum.AutomaticSize.Y
+WorkforceContainer.BackgroundTransparency = 1
+WorkforceContainer.Parent = AltsScroll
+
+local wList = Instance.new("UIListLayout")
+wList.Padding = UDim.new(0, 12)
+wList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+wList.Parent = WorkforceContainer
+
+local BotScroll = WorkforceContainer -- Bot update loop now targets this child container
 
 local function addBotCard(data)
     local card = Instance.new("Frame")
@@ -703,11 +723,13 @@ end
 
 task.spawn(function()
     while task.wait(3) do
+        if getgenv().Kamaik_Unloaded then break end
         if isfolder and listfiles then
             pcall(function()
                 BotScroll:ClearAllChildren()
                 local l = Instance.new("UIListLayout")
                 l.Padding = UDim.new(0, 8)
+                l.HorizontalAlignment = Enum.HorizontalAlignment.Center
                 l.Parent = BotScroll
                 
                 local files = listfiles("")
@@ -1177,103 +1199,198 @@ botHeader.Parent = AltsScroll
 
 -- Buyers Tab Content
 local function updateBuyerList()
-    for _, child in pairs(Tabs.Buyers:GetChildren()) do
-        if child:IsA("Frame") and child.Name == "BuyerEntry" then
-            child:Destroy()
-        end
-    end
+    -- Buyer list logic simplified later in one section
+end
+
+local BuyerScroll = Tabs.Buyers -- Re-using the main scroll
+
+local searchFrame = Instance.new("Frame")
+searchFrame.Size = UDim2.new(0.95, 0, 0, 35)
+searchFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+searchFrame.Parent = BuyerScroll
+
+local sc = Instance.new("UICorner")
+sc.CornerRadius = UDim.new(0, 8)
+sc.Parent = searchFrame
+
+local searchInput = Instance.new("TextBox")
+searchInput.Size = UDim2.new(1, -20, 1, 0)
+searchInput.Position = UDim2.new(0, 10, 0, 0)
+searchInput.BackgroundTransparency = 1
+searchInput.PlaceholderText = "Search players to whitelist..."
+searchInput.Text = ""
+searchInput.TextColor3 = Color3.new(1, 1, 1)
+searchInput.Font = Enum.Font.GothamMedium
+searchInput.TextSize = 12
+searchInput.TextXAlignment = Enum.TextXAlignment.Left
+searchInput.Parent = searchFrame
+
+local SearchResults = Instance.new("Frame")
+SearchResults.Size = UDim2.new(0.95, 0, 0, 0)
+SearchResults.AutomaticSize = Enum.AutomaticSize.Y
+SearchResults.BackgroundTransparency = 1
+SearchResults.Parent = BuyerScroll
+
+local srList = Instance.new("UIListLayout")
+srList.Padding = UDim.new(0, 4)
+srList.Parent = SearchResults
+
+local CurrentWhitelist = Instance.new("Frame")
+CurrentWhitelist.Size = UDim2.new(0.95, 0, 0, 0)
+CurrentWhitelist.AutomaticSize = Enum.AutomaticSize.Y
+CurrentWhitelist.BackgroundTransparency = 1
+CurrentWhitelist.Parent = BuyerScroll
+
+local cwList = Instance.new("UIListLayout")
+cwList.Padding = UDim.new(0, 4)
+cwList.Parent = CurrentWhitelist
+
+local function refreshBuyers()
+    CurrentWhitelist:ClearAllChildren()
+    local l = Instance.new("UIListLayout")
+    l.Padding = UDim.new(0, 5)
+    l.Parent = CurrentWhitelist
     
-    for i, username in ipairs(getgenv().BotConfig.WhitelistedBuyers) do
+    local h = Instance.new("TextLabel")
+    h.Size = UDim2.new(1, 0, 0, 20)
+    h.BackgroundTransparency = 1
+    h.Text = "WHITELISTED BUYERS"
+    h.TextColor3 = Color3.fromRGB(120, 120, 140)
+    h.Font = Enum.Font.GothamBold
+    h.TextSize = 9
+    h.Parent = CurrentWhitelist
+
+    for i, name in ipairs(getgenv().BotConfig.WhitelistedBuyers) do
         local entry = Instance.new("Frame")
-        entry.Name = "BuyerEntry"
-        entry.Size = UDim2.new(0.95, 0, 0, 35)
-        entry.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        entry.Parent = Tabs.Buyers
+        entry.Size = UDim2.new(1, 0, 0, 32)
+        entry.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        entry.Parent = CurrentWhitelist
+        Instance.new("UICorner", entry).CornerRadius = UDim.new(0, 6)
         
-        local ec = Instance.new("UICorner")
-        ec.CornerRadius = UDim.new(0, 6)
-        ec.Parent = entry
-        
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, -50, 1, 0)
-        label.Position = UDim2.new(0, 12, 0, 0)
-        label.BackgroundTransparency = 1
-        label.Text = username
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.Font = Enum.Font.GothamMedium
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.Parent = entry
+        local txt = Instance.new("TextLabel")
+        txt.Size = UDim2.new(1, -40, 1, 0)
+        txt.Position = UDim2.new(0, 12, 0, 0)
+        txt.BackgroundTransparency = 1
+        txt.Text = name
+        txt.TextColor3 = Color3.new(1, 1, 1)
+        txt.Font = Enum.Font.GothamMedium
+        txt.TextSize = 11
+        txt.TextXAlignment = Enum.TextXAlignment.Left
+        txt.Parent = entry
         
         local del = Instance.new("TextButton")
-        del.Size = UDim2.new(0, 30, 0, 25)
-        del.Position = UDim2.new(1, -35, 0.5, 0)
+        del.Size = UDim2.new(0, 24, 0, 24)
+        del.Position = UDim2.new(1, -28, 0.5, 0)
         del.AnchorPoint = Vector2.new(0, 0.5)
-        del.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        del.BackgroundColor3 = Color3.fromRGB(150, 40, 40)
         del.Text = "X"
         del.TextColor3 = Color3.new(1, 1, 1)
-        del.Font = Enum.Font.GothamBold
-        del.TextSize = 12
         del.Parent = entry
-        
-        local dc = Instance.new("UICorner")
-        dc.CornerRadius = UDim.new(0, 4)
-        dc.Parent = del
+        Instance.new("UICorner", del).CornerRadius = UDim.new(0, 4)
         
         del.MouseButton1Click:Connect(function()
             table.remove(getgenv().BotConfig.WhitelistedBuyers, i)
             syncConfig("WhitelistedBuyers", getgenv().BotConfig.WhitelistedBuyers)
-            updateBuyerList()
+            refreshBuyers()
         end)
     end
 end
 
-local addBuyerFrame = Instance.new("Frame")
-addBuyerFrame.Size = UDim2.new(0.95, 0, 0, 50)
-addBuyerFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-addBuyerFrame.Parent = Tabs.Buyers
-
-local abc = Instance.new("UICorner")
-abc.CornerRadius = UDim.new(0, 8)
-abc.Parent = addBuyerFrame
-
-local buyerInput = Instance.new("TextBox")
-buyerInput.Size = UDim2.new(1, -80, 0, 30)
-buyerInput.Position = UDim2.new(0, 10, 0.5, 0)
-buyerInput.AnchorPoint = Vector2.new(0, 0.5)
-buyerInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-buyerInput.PlaceholderText = "Type username..."
-buyerInput.Text = ""
-buyerInput.TextColor3 = Color3.new(1, 1, 1)
-buyerInput.Font = Enum.Font.GothamMedium
-buyerInput.TextSize = 12
-buyerInput.Parent = addBuyerFrame
-
-local addBtn = Instance.new("TextButton")
-addBtn.Size = UDim2.new(0, 60, 0, 30)
-addBtn.Position = UDim2.new(1, -70, 0.5, 0)
-addBtn.AnchorPoint = Vector2.new(0, 0.5)
-addBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
-addBtn.Text = "Add"
-addBtn.TextColor3 = Color3.new(1, 1, 1)
-addBtn.Font = Enum.Font.GothamBold
-addBtn.TextSize = 12
-addBtn.Parent = addBuyerFrame
-
-local abtc = Instance.new("UICorner")
-abtc.CornerRadius = UDim.new(0, 6)
-abtc.Parent = addBtn
-
-addBtn.MouseButton1Click:Connect(function()
-    if buyerInput.Text ~= "" then
-        table.insert(getgenv().BotConfig.WhitelistedBuyers, buyerInput.Text)
-        buyerInput.Text = ""
-        syncConfig("WhitelistedBuyers", getgenv().BotConfig.WhitelistedBuyers)
-        updateBuyerList()
+local function updateSearch(query)
+    SearchResults:ClearAllChildren()
+    local l = Instance.new("UIListLayout")
+    l.Padding = UDim.new(0, 4)
+    l.Parent = SearchResults
+    
+    if query == "" then return end
+    
+    local count = 0
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and (p.Name:lower():find(query:lower()) or p.DisplayName:lower():find(query:lower())) then
+            count = count + 1
+            if count > 5 then break end
+            
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 30)
+            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+            btn.Text = "   + " .. p.DisplayName .. " (@" .. p.Name .. ")"
+            btn.TextColor3 = Color3.new(1, 1, 1)
+            btn.Font = Enum.Font.GothamMedium
+            btn.TextSize = 11
+            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.Parent = SearchResults
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+            
+            btn.MouseButton1Click:Connect(function()
+                if not table.find(getgenv().BotConfig.WhitelistedBuyers, p.Name) then
+                    table.insert(getgenv().BotConfig.WhitelistedBuyers, p.Name)
+                    syncConfig("WhitelistedBuyers", getgenv().BotConfig.WhitelistedBuyers)
+                    refreshBuyers()
+                    searchInput.Text = ""
+                    SearchResults:ClearAllChildren()
+                end
+            end)
+        end
     end
+end
+
+searchInput:GetPropertyChangedSignal("Text"):Connect(function()
+    updateSearch(searchInput.Text)
 end)
 
-updateBuyerList()
+refreshBuyers()
+
+local UtilsHeader = Instance.new("TextLabel")
+UtilsHeader.Size = UDim2.new(1, 0, 0, 30)
+UtilsHeader.BackgroundTransparency = 1
+UtilsHeader.Text = "MONEY UTILITIES"
+UtilsHeader.TextColor3 = Color3.fromRGB(120, 120, 140)
+UtilsHeader.Font = Enum.Font.GothamBold
+UtilsHeader.TextSize = 9
+UtilsHeader.Parent = BuyerScroll
+
+createToggle(BuyerScroll, "Money ESP", false, function(v) getgenv().BotConfig.MoneyESP = v end)
+createToggle(BuyerScroll, "Auto Pickup Money", false, function(v) getgenv().BotConfig.AutoPickup = v end)
+
+local espHighlights = {}
+trackTask(game:GetService("RunService").Heartbeat:Connect(function()
+    if getgenv().Kamaik_Unloaded then return end
+    
+    -- ESP Logic
+    if getgenv().BotConfig.MoneyESP then
+        local dropFolder = game.Workspace:FindFirstChild("Ignored") and game.Workspace.Ignored:FindFirstChild("Drop")
+        if dropFolder then
+            for _, item in pairs(dropFolder:GetChildren()) do
+                if item.Name == "MoneyDrop" and not item:FindFirstChild("KamaikHighlight") then
+                    local h = Instance.new("Highlight")
+                    h.Name = "KamaikHighlight"
+                    h.FillTransparency = 1
+                    h.OutlineColor = Color3.new(1, 1, 1)
+                    h.OutlineTransparency = 0.5
+                    h.Parent = item
+                end
+            end
+        end
+    else
+        -- Clean highlights if toggled off
+    end
+    
+    -- Pickup Logic
+    if getgenv().BotConfig.AutoPickup and LocalPlayer.Character then
+        local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local dropFolder = game.Workspace:FindFirstChild("Ignored") and game.Workspace.Ignored:FindFirstChild("Drop")
+        if hrp and dropFolder then
+            for _, item in pairs(dropFolder:GetChildren()) do
+                if item.Name == "MoneyDrop" and item:FindFirstChild("ClickDetector") then
+                    local dist = (hrp.Position - item.Position).Magnitude
+                    if dist < (getgenv().BotConfig.PickupRange or 50) then
+                        fireclickdetector(item.ClickDetector)
+                    end
+                end
+            end
+        end
+    end
+end))
 
 -- Stats Tab Content
 local StatsList = Instance.new("ScrollingFrame")
@@ -1434,6 +1551,10 @@ end)
 
 createToggle(Tabs.Settings, "Broadcast Anti-White Screen", true, function(v) getgenv().BotConfig.AntiWhiteScreen = v; syncConfig("AntiWhiteScreen", v) end)
 
+createMiscBtn(Tabs.Settings, "Unload Script", function()
+    unloadScript()
+end)
+
 local ToggleKey = Enum.KeyCode.RightShift
 
 local function createKeybind(parent, text, defaultKey, callback)
@@ -1529,7 +1650,7 @@ end)
 
 local MainScale = Instance.new("UIScale")
 MainScale.Scale = 1
-MainFrame.BackgroundTransparency = 0
+MainFrame.GroupTransparency = 0
 MainFrame.Visible = true
 
 local isGuiVisible = true
@@ -1537,12 +1658,11 @@ local function toggleGui(visible)
     isGuiVisible = visible
     if isGuiVisible then
         MainFrame.Visible = true
-        MainFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
-        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, 0, 0.5, 0), BackgroundTransparency = 0}):Play()
-        TweenService:Create(MainScale, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
+        TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
     else
-        TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(0.5, 0, 0.55, 0), BackgroundTransparency = 1}):Play()
-        local t = TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Scale = 0.9})
+        TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1}):Play()
+        local t = TweenService:Create(MainScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Scale = 0.9})
         t:Play()
         t.Completed:Connect(function()
             if not isGuiVisible then MainFrame.Visible = false end
@@ -1550,14 +1670,13 @@ local function toggleGui(visible)
     end
 end
 
--- Play startup slide-in animation
-MainFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
-MainFrame.BackgroundTransparency = 1
-MainScale.Scale = 0.9
+-- Play startup fade
+MainFrame.GroupTransparency = 1
+MainScale.Scale = 0.95
 toggleGui(true)
 
-UserInputService.InputBegan:Connect(function(input, gpe)
+trackTask(UserInputService.InputBegan:Connect(function(input, gpe)
     if not gpe and input.KeyCode == ToggleKey then
         toggleGui(not isGuiVisible)
     end
-end)
+end))
